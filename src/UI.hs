@@ -11,7 +11,7 @@ import Data.Text (Text)
 import Control.Monad
 import Reflex.Dom hiding (button)
 
-import UI.Utils
+-- import UI.Utils
 
 newtype Label = Label Text -- TODO: System image?
 
@@ -53,12 +53,15 @@ headWidget = do
 
 -- | A centered container
 contentView :: MonadWidget t m => m a -> m a
-contentView = divClass "container mx-auto py-4 px-2"
+contentView = divClass "container mx-auto py-6 px-4"
+
+hstack :: MonadWidget t m => m a -> m a
+hstack = divClass "grid sm:grid-flow-col sm:auto-cols-max justify-evenly md:gap-2 gap-8"
 
 form :: MonadWidget t m
-     => ExplicitSizedList n Text -- ^ List of label texts and inputs
+     => [Text] -- ^ List of label texts and inputs
      -> Text   -- ^ Submit button text
-     -> m (Event t (ExplicitSizedList n Text))
+     -> m (Event t [Text])
 form labels submitText = elClass "form" "form" do
     rec
         inputs <- forM labels $ \labelText -> value <$> do
@@ -68,7 +71,7 @@ form labels submitText = elClass "form" "form" do
                         & (initialAttributes .~ ("type" =: "text" <> "class" =: "input"))
                         . (inputElementConfig_setValue .~ ("" <$ btnEvt)))
         btnEvt <- button submitText
-    return (btnEvt `taggedWith` _ inputs)
+    return (btnEvt `taggedWith` distributeListOverDyn inputs)
 
 input :: MonadWidget t m => m (InputElement EventResult (DomBuilderSpace m) t)
 input = inputElement (def & initialAttributes .~ ("type" =: "text" <> "class" =: "input"))
