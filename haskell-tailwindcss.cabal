@@ -1,0 +1,46 @@
+cabal-version:      2.4
+name:               haskell-tailwindcss
+version:            0.1.0.0
+synopsis:
+
+-- A longer description of the package.
+-- description:
+homepage:
+
+-- A URL where users can report bugs.
+-- bug-reports:
+license:            BSD-3-Clause
+license-file:       LICENSE
+author:             romes
+maintainer:         rodrigo.m.mesquita@gmail.com
+
+-- A copyright notice.
+-- copyright:
+category:           Web
+extra-source-files: CHANGELOG.md
+
+executable main
+    default-language: Haskell2010
+    main-is: Main.hs
+    build-depends:    base ^>=4.14.3.0,
+                      haskell-tailwindcss,
+                      cob,
+                      cob-reflex,
+                      text
+    ghc-options: -threaded
+
+library
+    exposed-modules:  UI
+
+    -- Modules included in this library but not exported.
+    -- other-modules:
+
+    -- LANGUAGE extensions used by modules in this package.
+    -- other-extensions:
+    build-depends:    base ^>=4.14.3.0,
+                      reflex-dom,
+                      text,
+                      file-embed,
+    hs-source-dirs:   src
+    default-language: Haskell2010
+    ghc-options: -Wall
