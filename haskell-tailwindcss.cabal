@@ -30,7 +30,7 @@ executable main
     ghc-options: -threaded
 
 library
-    exposed-modules:  UI
+    exposed-modules:  UI, UI.Utils
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -41,6 +41,10 @@ library
                       reflex-dom,
                       text,
                       file-embed,
+                      dependent-map,
+                      dependent-sum,
+                      mtl,
+                      patch,
     hs-source-dirs:   src
     default-language: Haskell2010
     ghc-options: -Wall

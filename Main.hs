@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -24,25 +25,27 @@ todoform = do
         btnEvt <- button "Add Todo"
     return (btnEvt `taggedWith` (Todo <$> value todoIn))
 
+test :: ExplicitSizedList ('S ('S 'Z)) Text
+test = "name":.("age":.E)
+
+decompose =
+    case test of
+      (n:.(age:.E)) -> Movie n age
+
 movieform :: MonadWidget t m => m (Event t Movie)
 movieform = do
-    formres <- form ["Movie Name", "Movie Year"] "Add Movie"
+    formres <- form (fromList ["Movie Name", "Movie Year"]) "Add Movie"
     return (list2Movie <$> formres)
     where
-        -- TODO: Use "dependently typed" sized lists to guarantee correctness?
-        list2Movie (Fields (name:.(year:.E))) = Movie name year
+        list2Movie (name:.year:.E) = Movie name year
 
 root :: MonadWidget t m => CobSession -> m ()
-root session = container $ do
+root session = contentView $ do
 
     addMovieEvt <- movieform
     rmAddInstances addMovieEvt session
 
     return ()
-
-
-
-
 
 main = do
     cobToken <- init <$> readFile "cob-token.secret"

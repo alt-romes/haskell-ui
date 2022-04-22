@@ -1,6 +1,4 @@
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE GADTs #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE Rank2Types #-}
@@ -9,38 +7,11 @@
 module UI ( module Reflex.Dom, module UI, Text ) where
 
 import Data.FileEmbed
-import Data.Text
+import Data.Text (Text)
 import Control.Monad
 import Reflex.Dom hiding (button)
 
---- Dependently typed static size list ----
-
-data Size = Z | S Size
-
--- ExplicitSizedList is a list with a staticallu typed size
-data ExplicitSizedList :: Size -> * -> * where
-  E :: ExplicitSizedList 'Z a
-  (:.) :: a -> ExplicitSizedList n a -> ExplicitSizedList ('S n) a
-
--- | Fields is a dependently typed datatype containing a fixed amount of fields
--- Which is used in the forms functions, which takes a variable list of labels,
--- but returns a fixed amount of fields, which can be pattern matched against
--- exactly
-data Fields :: * where
-    Fields :: ExplicitSizedList n Text -> Fields
-
-sizedFields :: [Text] -> Fields
-sizedFields []     = Fields E
-sizedFields (x:xs) = case sizedFields xs of
-    Fields l -> Fields (x :. l)
-
--- -- Number which also has a statically typed size
--- data SizedNat :: Size -> * where
---   NZ :: SizedNat 'Z
---   NS :: SizedNat n -> SizedNat ('S n)
-
-------------------------------------------
-
+import UI.Utils
 
 newtype Label = Label Text -- TODO: System image?
 
@@ -78,17 +49,16 @@ headWidget = do
     elAttr "meta" ("charset" =: "utf-8") blank
     elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") blank
     -- elAttr "link" ("rel" =: "stylesheet" <> "href" =: "https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css") blank
-    -- elAttr "link" ("rel" =: "stylesheet" <> "href" =: "dist/output.css") blank
     el "style" (text $(embedStringFile "dist/output.css"))
 
 -- | A centered container
-container :: MonadWidget t m => m a -> m a
-container = divClass "container mx-auto py-2 px-1"
+contentView :: MonadWidget t m => m a -> m a
+contentView = divClass "container mx-auto py-4 px-2"
 
 form :: MonadWidget t m
-     => [Text] -- ^ List of label texts and inputs
-     -> Text           -- ^ Submit button text
-     -> m (Event t Fields)
+     => ExplicitSizedList n Text -- ^ List of label texts and inputs
+     -> Text   -- ^ Submit button text
+     -> m (Event t (ExplicitSizedList n Text))
 form labels submitText = elClass "form" "form" do
     rec
         inputs <- forM labels $ \labelText -> value <$> do
@@ -98,7 +68,7 @@ form labels submitText = elClass "form" "form" do
                         & (initialAttributes .~ ("type" =: "text" <> "class" =: "input"))
                         . (inputElementConfig_setValue .~ ("" <$ btnEvt)))
         btnEvt <- button submitText
-    return (btnEvt `taggedWith` (sizedList <$> distributeListOverDyn inputs))
+    return (btnEvt `taggedWith` _ inputs)
 
 input :: MonadWidget t m => m (InputElement EventResult (DomBuilderSpace m) t)
 input = inputElement (def & initialAttributes .~ ("type" =: "text" <> "class" =: "input"))
@@ -112,7 +82,7 @@ input' changeValueEvt =
 
 button :: MonadWidget t m => Text -> m (Event t ())
 button t = do
-    (btn, _) <- elClass' "button" "rounded-md border" $ text t
+    (btn, _) <- elClass' "button" "button" $ text t
     return $ domEvent Click btn
 
 taggedWith :: Reflex t => Event t b -> Dynamic t a -> Event t a

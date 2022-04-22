@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @layer components {
+
     .card {
         @apply py-8 px-6 shadow rounded-lg sm:px-10
     }
@@ -16,6 +17,11 @@
     }
 
     .input {
-        @apply w-full border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+        @apply border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
     }
+
+    .button {
+        @apply border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
+    }
+
 }
