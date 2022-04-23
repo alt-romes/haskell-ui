@@ -590,6 +590,10 @@ Ensure the default browser behavior of the `hidden` attribute.
   display: block;
 }
 
+.flex {
+  display: flex;
+}
+
 .grid {
   display: grid;
 }
@@ -598,49 +602,28 @@ Ensure the default browser behavior of the `hidden` attribute.
   display: contents;
 }
 
-.columns-auto {
-  -moz-columns: auto;
-       columns: auto;
+.flex-row {
+  flex-direction: row;
 }
 
-.columns-2 {
-  -moz-columns: 2;
-       columns: 2;
+.flex-col {
+  flex-direction: column;
 }
 
-.auto-cols-max {
-  grid-auto-columns: -webkit-max-content;
-  grid-auto-columns: max-content;
-}
-
-.grid-flow-col {
-  grid-auto-flow: column;
-}
-
-.justify-center {
-  justify-content: center;
+.flex-wrap {
+  flex-wrap: wrap;
 }
 
 .justify-evenly {
   justify-content: space-evenly;
 }
 
-.gap-4 {
-  gap: 1rem;
-}
-
 .gap-8 {
   gap: 2rem;
 }
 
-.py-4 {
-  padding-top: 1rem;
-  padding-bottom: 1rem;
-}
-
-.px-2 {
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
+.p-2 {
+  padding: 0.5rem;
 }
 
 .py-6 {
@@ -662,26 +645,9 @@ Ensure the default browser behavior of the `hidden` attribute.
   .sm\:grid-flow-col {
     grid-auto-flow: column;
   }
-
-  .sm\:gap-4 {
-    gap: 1rem;
-  }
 }
 
 @media (min-width: 768px) {
-  .md\:auto-cols-max {
-    grid-auto-columns: -webkit-max-content;
-    grid-auto-columns: max-content;
-  }
-
-  .md\:grid-flow-col {
-    grid-auto-flow: column;
-  }
-
-  .md\:gap-4 {
-    gap: 1rem;
-  }
-
   .md\:gap-2 {
     gap: 0.5rem;
   }

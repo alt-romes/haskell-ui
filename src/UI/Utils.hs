@@ -9,14 +9,7 @@ import Prelude hiding (foldr)
 
 import Data.Foldable (foldr, toList)
 
-import qualified Data.Dependent.Map as DMap
-import Data.Dependent.Sum (DSum (..))
-import Data.Functor.Misc
-
 import Control.Applicative
-import Control.Monad.Identity
-
-import Reflex.Dom
 
 --- Dependently typed static size list ----
 

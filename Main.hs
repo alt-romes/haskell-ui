@@ -1,4 +1,4 @@
-{-# LANGUAGE MonoLocalBinds #-}
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
@@ -29,7 +29,8 @@ main = do
                 addMovieEvt <- form ["Movie Name", "Movie Year", "Director", "Rating"] "Add Movie"
                 rmAddInstances ((\[name, year, director, rating] -> Movie name year director rating) <$> addMovieEvt) session
 
-                divClass "" $ do
+                vstack $ do
+
                     addTodoEvt <- form ["Todo"] "Add Todo"
                     rmAddInstances ((\[todo] -> Todo todo) <$> addTodoEvt) session
 
