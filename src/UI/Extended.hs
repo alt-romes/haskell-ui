@@ -34,8 +34,8 @@ renderAttrs = T.unwords
 
 input_ :: MonadWidget t ui
        => [Attribute]
-       -> ui (InputElement EventResult (DomBuilderSpace ui) t)
-input_ = flip input_' id
+       -> ui (Dynamic t Text)
+input_ = fmap value . flip input_' id
 {-# INLINE input_ #-}
 
 input_' :: MonadWidget t ui
@@ -57,12 +57,12 @@ button_ attrs t = do
 
 --- Unused... ---
 
-data UI = UI :-: UI
-          | Attribute :> UI
-          | UI :< Attribute 
-          | ContentView UI
-          | VStack UI
-          | HStack UI
+data UIM = UIM :-: UIM
+          | Attribute :> UIM
+          | UIM :< Attribute 
+          | ContentView UIM
+          | VStack UIM
+          | HStack UIM
           | Form [Text] Text
           | Text Text
           | Empty
@@ -70,10 +70,10 @@ data UI = UI :-: UI
 infixr 0 :>
 infixl 0 :<
 
-instance Semigroup UI where
+instance Semigroup UIM where
     f <> x = f :-: x
     {-# INLINE (<>) #-}
 
-instance Monoid UI where
+instance Monoid UIM where
     mempty = Empty
     {-# INLINE mempty #-}

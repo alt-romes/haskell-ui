@@ -15,6 +15,9 @@ import Reflex.Dom hiding (button)
 
 import UI.Extended
 
+newtype UI t a = UI { unUI :: forall m. MonadWidget t m => m a }
+    deriving (Functor)
+
 -- | The mainUI function takes a root and renders the app
 mainUI :: (forall t ui. MonadWidget t ui => ui ()) -> IO ()
 mainUI = mainWidgetWithHead headWidget
@@ -41,15 +44,31 @@ vstack = divClass "flex flex-col flex-wrap justify-evenly gap-8"
 
 ---- Input -------------
 
-input :: MonadWidget t ui => ui (InputElement EventResult (DomBuilderSpace ui) t)
-input = input' id
+-- | Simplest Input box
+input :: MonadWidget t ui => ui (Dynamic t Text)
+input = value <$> input' id
 {-# INLINE input #-}
 
+-- | Complex Input that takes a Lens/Function to modify the InputElConfig
+-- and returns the full InputElement
 input' :: MonadWidget t ui
        => (InputElementConfig EventResult t (DomBuilderSpace ui) -> InputElementConfig EventResult t (DomBuilderSpace ui)) -- ^ Lens/Function to modify the InputElConfig
        -> ui (InputElement EventResult (DomBuilderSpace ui) t)
 input' = input_' []
 {-# INLINE input' #-}
+
+-- | Simple Input with a Label
+inputL :: MonadWidget t ui => Text -> ui (Dynamic t Text)
+inputL label = divClass "" $ do
+    elClass "label" "label mb-1" $ text label
+    input
+
+-- | Simple Input with a label.
+-- The input value is cleared when the @Event@ fires.
+inputLC :: MonadWidget t ui => Text -> Event t a -> ui (Dynamic t Text)
+inputLC label evt = divClass "" $ do
+    elClass "label" "label mb-1" $ text label
+    value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
 
 ---- Button ------------
 
@@ -70,11 +89,18 @@ form labels submitText = elClass "form" "form" do
                     elClass "label" "label mb-1" $ text labelText
                     input' (inputElementConfig_setValue .~ ("" <$ btnEvt))
         btnEvt <- button submitText
-    return (btnEvt `taggedWith` distributeListOverDyn inputs)
+    return (btnEvt <~~ distributeListOverDyn inputs)
 
 
-taggedWith :: Reflex t => Event t b -> Dynamic t a -> Event t a
-taggedWith = flip tagPromptlyDyn
+(<~~) :: Reflex t => Event t b -> Dynamic t a -> Event t a
+(<~~) = flip tagPromptlyDyn
+
+infixl 1 <~~
+
+(~~>) :: Reflex t => Dynamic t a -> Event t b -> Event t a
+(~~>) = tagPromptlyDyn
+
+infixr 1 ~~>
 
 -- todoListWidget :: MonadWidget t m => Dynamic t [Todo] -> m ()
 -- todoListWidget = void . flip simpleList (elClass "p" "block" . dynText . fmap todoText)

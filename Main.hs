@@ -1,3 +1,4 @@
+{-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -24,6 +25,16 @@ main = do
     mainUI $ do
 
         contentView $ do
+            vstack $ mdo
+                v1 <- inputLC "Title" btn
+                v2 <- inputLC "Yaer" btn
+                v3 <- inputLC "Director" btn
+                v4 <- inputLC "Rating" btn
+                btn <- button "Btn"
+                rmAddInstances (btn <~~ Movie <$> v1 <*> v2 <*> v3 <*> v4) session
+
+
+        contentView $ do
 
             hstack $ do
 
@@ -34,8 +45,6 @@ main = do
 
                     addTodoEvt <- form ["Todo"] "Add Todo"
                     rmAddInstances ((\[todo] -> Todo todo) <$> addTodoEvt) session
-
-                    addTodoEvt <- form ["Kardashian Name", "Kardhaian Son", "KArdahsing Rapper Marry"] "Olá"
 
                     _ <- button_ ["bg-red-500"] "Big top"
 
