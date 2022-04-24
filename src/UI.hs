@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE GADTs #-}
@@ -21,73 +22,86 @@ data Side = T | R | B | L
 data Attribute = Raw Text
                | Padding [Side] Int
 
-data UI a = forall b. UI b :-: UI a
-          | UI a :!: Attribute
-          | ContentView (UI a)
-          | VStack (UI a)
-          | HStack (UI a)
+data UI t a = forall b. UI t b :-: UI t a
+          | Attribute :> UI t a
+          | UI t a :< Attribute 
+          | ContentView (UI t a)
+          | VStack (UI t a)
+          | HStack (UI t a)
+          | Form [Text] Text a
           | Text Text a
           | Empty a
 
-deriving instance Functor UI
+infixr 0 :>
+infixl 0 :<
 
--- makeBaseFunctor ''UI
+deriving instance Functor (UI t)
 
-data UIF a b = forall c. UI c :-:$ b 
-             | b :!:$ Attribute
+data UIF t a b = forall c. UI t c :-:$ b 
+             | Attribute :>$ b
+             | b :<$ Attribute 
              | ContentViewF b
              | VStackF b
              | HStackF b
+             | FormF [Text] Text a
              | TextF Text a
              | EmptyF a
 
-deriving instance Functor (UIF a)
-deriving instance Foldable (UIF a)
-deriving instance Traversable (UIF a)
+deriving instance Functor (UIF t a)
+deriving instance Foldable (UIF t a)
+deriving instance Traversable (UIF t a)
 
-type instance Base (UI a) = UIF a
+type instance Base (UI t a) = UIF t a
 
-instance Recursive (UI a) where
+instance Recursive (UI t a) where
       project (x :-: y) = x :-:$ y
-      project (x :!: y) = x :!:$ y
+      project (x :> y) = x :>$ y
+      project (x :< y) = x :<$ y
       project (ContentView x) = ContentViewF x
       project (VStack x) = VStackF x
       project (HStack x) = HStackF x
+      project (Form x y z) = FormF x y z
       project (Text t x) = TextF t x
       project (Empty x) = EmptyF x
 
-instance Corecursive (UI a) where
+instance Corecursive (UI t a) where
       embed (x :-:$ y) = x :-: y
-      embed (x :!:$ y) = x :!: y
+      embed (x :>$ y) = x :> y
+      embed (x :<$ y) = x :< y
       embed (ContentViewF x) = ContentView x
       embed (VStackF x) = VStack x
       embed (HStackF x) = HStack x
+      embed (FormF x y z) = Form x y z
       embed (TextF t x) = Text t x
       embed (EmptyF x) = Empty x
 
-extract :: UI a -> a
+extract :: UI t a -> a
 extract = cata go where
-    go :: UIF a a -> a
-    go (x :!:$ _) = x
-    go (TextF _ x) = x
-    go (EmptyF x) = x
+    go :: UIF t a a -> a
     go fs = case foldr (:) [] fs of
         x:xs -> last (x:xs)
-        _ -> error "All other constructors should have at least one (UI a)   \
-                   \ argument, and extract `a` from the last (UI a) argument."
+        _ -> error "All other constructors should have at least one (UI a) \
+                   \ argument, and should extract `a` from the last (UI a) argument."
 
-instance Applicative UI where
+instance Applicative (UI t) where
     pure x = Empty x
     {-# INLINE pure #-}
     f <*> x = f :-: x :-: Empty (extract f $ extract x)
     {-# INLINE (<*>) #-}
 
-instance Monad UI where
+instance Monad (UI t) where
     x >>= f = x :-: f (extract x)
     {-# INLINE (>>=) #-}
 
+form' ::
+      [Text] -- ^ List of label texts and inputs
+      -> Text   -- ^ Submit button text
+      -> UI t (Event t [Text])
+form' = undefined
+
+main2 :: (Reflex t, MonadHold t (UI t)) => UI t ()
 main2 = do
-    ContentView $ do
+    Raw "hi" :> Padding [] 15 :> ContentView $ do
 
             HStack $ do
 
@@ -95,8 +109,12 @@ main2 = do
 
                 VStack $ do
 
-                    Text "Ho" True
+                    addEvt <- form' ["Movie Name", "Movie Year", "Director", "Rating"] "Add Movie" 
+                    dynEvt <- holdDyn [] addEvt
+
+                    Text "Ho" ()
                     Text "He" ()
+
 
 -- import UI.Utils
 
