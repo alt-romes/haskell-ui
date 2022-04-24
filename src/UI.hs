@@ -6,7 +6,7 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UI ( module Reflex.Dom, module UI, Text ) where
+module UI ( module Reflex.Dom, module UI, UI, Text ) where
 
 import Data.FileEmbed
 import Data.Text (Text)
@@ -15,12 +15,9 @@ import Reflex.Dom hiding (button)
 
 import UI.Extended
 
-newtype UI t a = UI { unUI :: forall m. MonadWidget t m => m a }
-    deriving (Functor)
-
 -- | The mainUI function takes a root and renders the app
-mainUI :: (forall t ui. MonadWidget t ui => ui ()) -> IO ()
-mainUI = mainWidgetWithHead headWidget
+mainUI :: (forall t. UI t ()) -> IO ()
+mainUI (UI root) = mainWidgetWithHead headWidget root
         where
             headWidget :: MonadWidget t ui => ui ()
             headWidget = do
@@ -31,64 +28,62 @@ mainUI = mainWidgetWithHead headWidget
 ---- Layout ------------
 
 -- | A centered container
-contentView :: MonadWidget t ui => ui a -> ui a
-contentView = divClass "container mx-auto py-6 px-4"
+contentView :: UI t a -> UI t a
+contentView (UI x) = UI $ divClass "container mx-auto py-6 px-4" x
 
 -- | Horizontally stack items
-hstack :: MonadWidget t ui => ui a -> ui a
-hstack = divClass "flex flex-row flex-wrap justify-evenly gap-8"
+hstack :: UI t a -> UI t a
+hstack (UI x) = UI $ divClass "flex flex-row flex-wrap justify-evenly gap-8" x
 
 -- | Vertically stack items
-vstack :: MonadWidget t ui => ui a -> ui a
-vstack = divClass "flex flex-col flex-wrap justify-evenly gap-8"
+vstack :: UI t a -> UI t a
+vstack (UI x) = UI $ divClass "flex flex-col flex-wrap justify-evenly gap-8" x
 
 ---- Input -------------
 
 -- | Simplest Input box
-input :: MonadWidget t ui => ui (Dynamic t Text)
+input :: UI t (Dynamic t Text)
 input = value <$> input' id
 {-# INLINE input #-}
 
 -- | Complex Input that takes a Lens/Function to modify the InputElConfig
 -- and returns the full InputElement
-input' :: MonadWidget t ui
-       => (InputElementConfig EventResult t (DomBuilderSpace ui) -> InputElementConfig EventResult t (DomBuilderSpace ui)) -- ^ Lens/Function to modify the InputElConfig
-       -> ui (InputElement EventResult (DomBuilderSpace ui) t)
+input' :: (InputElementConfig EventResult t GhcjsDomSpace -> InputElementConfig EventResult t GhcjsDomSpace) -- ^ Lens/Function to modify the InputElConfig
+       -> UI t (InputElement EventResult GhcjsDomSpace t)
 input' = input_' []
 {-# INLINE input' #-}
 
 -- | Simple Input with a Label
-inputL :: MonadWidget t ui => Text -> ui (Dynamic t Text)
-inputL label = divClass "" $ do
+inputL :: Text -> UI t (Dynamic t Text)
+inputL label = UI $ divClass "" $ do
     elClass "label" "label mb-1" $ text label
-    input
+    unUI input
 
 -- | Simple Input with a label.
 -- The input value is cleared when the @Event@ fires.
-inputLC :: MonadWidget t ui => Text -> Event t a -> ui (Dynamic t Text)
-inputLC label evt = divClass "" $ do
+inputLC :: Text -> Event t a -> UI t (Dynamic t Text)
+inputLC label evt = UI $ divClass "" $ do
     elClass "label" "label mb-1" $ text label
-    value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
+    unUI $ value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
 
 ---- Button ------------
 
-button :: MonadWidget t ui => Text -> ui (Event t ())
+button :: Text -> UI t (Event t ())
 button = button_ []
 {-# INLINE button #-}
 
 ------------------------
 
-form :: MonadWidget t ui
-     => [Text] -- ^ List of label texts and inputs
+form :: [Text] -- ^ List of label texts and inputs
      -> Text   -- ^ Submit button text
-     -> ui (Event t [Text])
-form labels submitText = elClass "form" "form" do
+     -> UI t (Event t [Text])
+form labels submitText = UI $ elClass "form" "form" do
     rec
         inputs <- forM labels $ \labelText -> value <$> do
                 divClass "" do
                     elClass "label" "label mb-1" $ text labelText
-                    input' (inputElementConfig_setValue .~ ("" <$ btnEvt))
-        btnEvt <- button submitText
+                    unUI $ input' (inputElementConfig_setValue .~ ("" <$ btnEvt))
+        btnEvt <- unUI $ button submitText
     return (btnEvt <~~ distributeListOverDyn inputs)
 
 

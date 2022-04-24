@@ -1,17 +1,34 @@
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MonoLocalBinds #-}
 module UI.Extended ( module UI.Extended ) where
 
 import Data.Text as T (Text, unwords)
+
+import Control.Monad.Fix
 import Reflex.Dom
+
+newtype UI t a = UI { unUI :: forall m. MonadWidget t m => m a }
+    deriving (Functor)
+
+instance Applicative (UI t) where
+    pure x = UI $ pure x
+    (UI f) <*> (UI a) = UI (f <*> a)
+
+instance Monad (UI t) where
+    (UI x) >>= f = UI (x >>= unUI . f)
+
+instance MonadFix (UI t) where
+    mfix f = UI $ mfix (unUI . f)
 
 data Side = T | R | B | L
 
 -- data Attribute = Raw Text
 --                | P [Side] Int
-type Attribute = Text
 
+type Attribute = Text
 type ClassName = Text
 
 renderAttrs :: [Attribute] -> ClassName
@@ -32,23 +49,21 @@ renderAttrs = T.unwords
 
 ---- Input -------------
 
-input_ :: MonadWidget t ui
-       => [Attribute]
-       -> ui (Dynamic t Text)
+input_ :: [Attribute]
+       -> UI t (Dynamic t Text)
 input_ = fmap value . flip input_' id
 {-# INLINE input_ #-}
 
-input_' :: MonadWidget t ui
-       => [Attribute]
-       -> (InputElementConfig EventResult t (DomBuilderSpace ui) -> InputElementConfig EventResult t (DomBuilderSpace ui)) -- ^ Lens/Function to modify the InputElConfig
-       -> ui (InputElement EventResult (DomBuilderSpace ui) t)
-input_' attrs confLens =
+input_' :: [Attribute]
+       -> (InputElementConfig EventResult t GhcjsDomSpace -> InputElementConfig EventResult t GhcjsDomSpace) -- ^ Lens/Function to modify the InputElConfig
+       -> UI t (InputElement EventResult GhcjsDomSpace t)
+input_' attrs confLens = UI $
     inputElement (def & (initialAttributes .~ ("type" =: "text" <> "class" =: renderAttrs ("input":attrs))) . confLens)
 
 ---- Button ------------
 
-button_ :: MonadWidget t ui => [Attribute] -> Text -> ui (Event t ())
-button_ attrs t = do
+button_ :: [Attribute] -> Text -> UI t (Event t ())
+button_ attrs t = UI $ do
     (btn, _) <- elClass' "button" (renderAttrs $ "button":attrs) $ text t
     return $ domEvent Click btn
 

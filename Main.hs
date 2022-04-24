@@ -1,5 +1,4 @@
 {-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
@@ -31,7 +30,7 @@ main = do
                 v3 <- inputLC "Director" btn
                 v4 <- inputLC "Rating" btn
                 btn <- button "Btn"
-                rmAddInstances (btn <~~ Movie <$> v1 <*> v2 <*> v3 <*> v4) session
+                UI $ rmAddInstances (btn <~~ Movie <$> v1 <*> v2 <*> v3 <*> v4) session
 
 
         contentView $ do
@@ -39,12 +38,12 @@ main = do
             hstack $ do
 
                 addMovieEvt <- form ["Movie Name", "Movie Year", "Director", "Rating"] "Add Movie"
-                rmAddInstances ((\[name, year, director, rating] -> Movie name year director rating) <$> addMovieEvt) session
+                UI $ rmAddInstances ((\[name, year, director, rating] -> Movie name year director rating) <$> addMovieEvt) session
 
                 vstack $ do
 
                     addTodoEvt <- form ["Todo"] "Add Todo"
-                    rmAddInstances ((\[todo] -> Todo todo) <$> addTodoEvt) session
+                    UI $ rmAddInstances ((\[todo] -> Todo todo) <$> addTodoEvt) session
 
                     _ <- button_ ["bg-red-500"] "Big top"
 
