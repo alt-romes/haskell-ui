@@ -19,16 +19,6 @@ maintainer:         rodrigo.m.mesquita@gmail.com
 category:           Web
 extra-source-files: CHANGELOG.md
 
-executable main
-    default-language: Haskell2010
-    main-is: Main.hs
-    build-depends:    base ^>=4.14.3.0,
-                      haskell-ui,
-                      cob,
-                      cob-reflex,
-                      text
-    ghc-options: -threaded
-
 library
     exposed-modules:  UI, UI.Utils, UI.Extended
 
@@ -40,7 +30,6 @@ library
     build-depends:    base >=4.14.3.0,
                       reflex-dom,
                       text,
-                      containers,
                       file-embed,
                       -- recursion-schemes,
     hs-source-dirs:   src
