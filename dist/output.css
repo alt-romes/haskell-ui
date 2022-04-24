@@ -594,14 +594,6 @@ Ensure the default browser behavior of the `hidden` attribute.
   display: flex;
 }
 
-.grid {
-  display: grid;
-}
-
-.contents {
-  display: contents;
-}
-
 .flex-row {
   flex-direction: row;
 }
@@ -622,8 +614,9 @@ Ensure the default browser behavior of the `hidden` attribute.
   gap: 2rem;
 }
 
-.p-2 {
-  padding: 0.5rem;
+.bg-red-500 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(239 68 68 / var(--tw-bg-opacity));
 }
 
 .py-6 {
@@ -634,21 +627,4 @@ Ensure the default browser behavior of the `hidden` attribute.
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
-}
-
-@media (min-width: 640px) {
-  .sm\:auto-cols-max {
-    grid-auto-columns: -webkit-max-content;
-    grid-auto-columns: max-content;
-  }
-
-  .sm\:grid-flow-col {
-    grid-auto-flow: column;
-  }
-}
-
-@media (min-width: 768px) {
-  .md\:gap-2 {
-    gap: 0.5rem;
-  }
 }

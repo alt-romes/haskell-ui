@@ -9,6 +9,7 @@ import Cob
 import Cob.RecordM.TH
 import Cob.RecordM.Reflex
 
+import UI.Extended
 import UI
 
 newtype Todo = Todo { todoText :: Text }
@@ -35,6 +36,9 @@ main = do
                     rmAddInstances ((\[todo] -> Todo todo) <$> addTodoEvt) session
 
                     addTodoEvt <- form ["Kardashian Name", "Kardhaian Son", "KArdahsing Rapper Marry"] "Olá"
+
+                    _ <- button_ ["bg-red-500"] "Big top"
+
                     return ()
 
         return ()
