@@ -126,7 +126,10 @@ router initialRoute routerF = UI $ mdo
     wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
     return ()
 
-router' :: (a, b) -> ((a, b) -> UI t (Event t (a, b))) -> UI t ()
+-- | Router! with state.
+--
+-- As @router@, but an additional @state@ is carried accross routes
+router' :: (a, state) -> ((a, state) -> UI t (Event t (a, state))) -> UI t ()
 router' initialRoute routerF = UI $ mdo
     wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
     return ()

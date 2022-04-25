@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -57,28 +58,24 @@ mainContent session = do
     return ()
 
 main :: IO ()
-main = mainUI $ do
+main = do
 
-    userLoginPage "mimes8.cultofbits.com" ~~> \case
+    emptyS <- emptySession "mimes8.cultofbits.com"
 
-        Nothing -> label "You done did it"
+    mainUI $ do
 
-        Just session -> do
+        router' ("/login", emptyS) $ \case
 
-            router "/login" $ \case
+            ("/login", _) -> do
+                loginEv <- userLoginPage "mimes8.cultofbits.com"
+                return ((\case Nothing -> ("/login",emptyS); Just s -> ("/main",s)) <$> loginEv)
 
-                "/login" -> do
-                    loginEv <- loginForm
-                    return ("/main" <$ loginEv)
+            ("/main", session) -> do
+                mainContent session
+                x <- button "Go To Unknown"
+                y <- button "Go To Login"
+                return ((,session) <$> (("//" <$ x) <> ("/login" <$ y)))
 
-                "/main" -> do
-                    mainContent session
-                    x <- button "Go To Unknown"
-                    y <- button "Go To Login"
-                    return (("//" <$ x) <> ("/login" <$ y))
-
-                _ -> do
-                    x <- button "Unknown"
-                    return ("/login" <$ x)
-
-            return never
+            (_, session) -> do
+                x <- button "Unknown"
+                return (("/login", session) <$ x)
