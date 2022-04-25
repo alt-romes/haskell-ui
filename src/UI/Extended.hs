@@ -7,6 +7,7 @@ module UI.Extended ( module Reflex.Dom, module UI.Extended ) where
 
 import Data.Text as T (Text, unwords)
 
+import Control.Monad.IO.Class
 import Control.Monad.Fix
 import Reflex.Dom hiding (button, display, dynText, blank)
 
@@ -22,6 +23,9 @@ instance Monad (UI t) where
 
 instance MonadFix (UI t) where
     mfix f = UI $ mfix (unUI . f)
+
+instance MonadIO (UI t) where
+    liftIO x = UI $ liftIO x
 
 data Side = T | R | B | L
 

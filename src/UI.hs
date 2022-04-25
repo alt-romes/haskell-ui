@@ -47,6 +47,11 @@ form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 
 ---- Input -------------
 
+label :: Text -> UI t ()
+label t = UI $ elClass "label" "label mb-1" $ text t
+
+data InputType = IText | IPassword
+
 -- | Simplest Input box
 input :: UI t (Dynamic t Text)
 input = value <$> input' id
@@ -61,16 +66,21 @@ input' = input_' []
 
 -- | Simple Input with a Label
 inputL :: Text -> UI t (Dynamic t Text)
-inputL label = UI $ divClass "" $ do
-    elClass "label" "label mb-1" $ text label
-    unUI input
+inputL t = UI $ divClass "" $ unUI $ do
+    label t
+    input
 
 -- | Simple Input with a label.
 -- The input value is cleared when the @Event@ fires.
 inputLC :: Text -> Event t a -> UI t (Dynamic t Text)
-inputLC label evt = UI $ divClass "" $ do
-    elClass "label" "label mb-1" $ text label
-    unUI $ value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
+inputLC t evt = UI $ divClass "" $ unUI $ do
+    label t
+    value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
+
+-- inputLT :: Text -> InputType -> UI t (Dynamic t Text)
+-- inputLT labelText inputType = UI $ divClass "" $ unUI $ do
+--     label labelText
+--     value <$> input' ()
 
 ---- Button ------------
 
@@ -91,7 +101,7 @@ dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
 
 ---- Routing! ----------
 
--- Router! Receives an initial value and a function that transforms
+-- | Router! Receives an initial value and a function that transforms
 -- values of the same type into UI holding value (route-changing) generating events
 --
 -- Example usage:
@@ -111,10 +121,32 @@ dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
 --           ev <- button "Return to login"
 --           return ("/login" <$ ev)
 -- @
-router :: Reflex t => a -> (a -> UI t (Event t a)) -> UI t ()
+router :: a -> (a -> UI t (Event t a)) -> UI t ()
 router initialRoute routerF = UI $ mdo
     wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
     return ()
+
+router' :: (a, b) -> ((a, b) -> UI t (Event t (a, b))) -> UI t ()
+router' initialRoute routerF = UI $ mdo
+    wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
+    return ()
+
+-- | Start at a UI returning an Event that when triggered will pass the value to
+-- a UI creating function.
+--
+-- Contrary to @router@, @path@ has a linear flow (from page A to page B and
+-- viceversa) and information from page A can be passed to page B.
+--
+-- @
+--     path (userLoginPage :: UI t (Event t Token)) $ \tok -> do
+--         dbTable "XYZ" tok    -- dbTable :: String -> Token -> UI t ()
+--         return never         -- never return to the previous page
+-- @
+path :: UI t (Event t a) -> (a -> UI t b) -> UI t ()
+path (UI g) f = UI $ mdo
+    pathEv <- widgetHold g ((never <$) . unUI . f <$> switchDyn pathEv)
+    return ()
+
 
 ---- Other -------------
 
@@ -126,8 +158,9 @@ blank = return ()
 
 infixl 1 <~~
 
-(~~>) :: Reflex t => Dynamic t a -> Event t b -> Event t a
-(~~>) = tagPromptlyDyn
+-- | The same as @path@, but more visually appealing
+(~~>) :: UI t (Event t a) -> (a -> UI t (Event t a)) -> UI t ()
+(~~>) = path
 
 infixr 1 ~~>
 

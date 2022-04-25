@@ -6,9 +6,12 @@ module Main where
 
 import qualified Data.Text as T
 
+import Control.Monad.IO.Class
+
 import Cob
 import Cob.RecordM.TH
 import Cob.RecordM.UI
+import Cob.UserM.UI
 
 import UI.Extended
 import UI
@@ -46,6 +49,7 @@ mainContent session = do
 
             -- Todos
             vstack $ mdo
+
                 val <- inputLC "Todo" click
                 click <- button "Add Todo"
                 rmAddInstances (click <~~ Todo <$> val) session
@@ -53,23 +57,28 @@ mainContent session = do
     return ()
 
 main :: IO ()
-main = do
-    cobToken <- init <$> readFile "cob-token.secret"
-    session  <- makeSession "mimes8.cultofbits.com" cobToken
+main = mainUI $ do
 
-    mainUI $ do
+    userLoginPage "mimes8.cultofbits.com" ~~> \case
 
-        router "/login" $ \case
+        Nothing -> label "You done did it"
 
-            "/login" -> do
-                loginEv <- loginForm
-                return ("/main" <$ loginEv)
+        Just session -> do
 
-            "/main" -> do
-                mainContent session
-                x <- button "LOL"
-                return ("//" <$ x)
-            
-            _ -> do
-                x <- button "Unknown"
-                return ("/login" <$ x)
+            router "/login" $ \case
+
+                "/login" -> do
+                    loginEv <- loginForm
+                    return ("/main" <$ loginEv)
+
+                "/main" -> do
+                    mainContent session
+                    x <- button "Go To Unknown"
+                    y <- button "Go To Login"
+                    return (("//" <$ x) <> ("/login" <$ y))
+
+                _ -> do
+                    x <- button "Unknown"
+                    return ("/login" <$ x)
+
+            return never
