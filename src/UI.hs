@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -6,23 +7,23 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UI ( module Reflex.Dom, module UI, UI, Text ) where
+module UI ( module UI, UI, Text ) where
 
 import Data.FileEmbed
-import Data.Text (Text)
-import Control.Monad
-import Reflex.Dom hiding (button)
+import Data.Text (Text, pack)
+
+import qualified Reflex.Dom as R
 
 import UI.Extended
 
 -- | The mainUI function takes a root and renders the app
-mainUI :: (forall t. UI t ()) -> IO ()
+mainUI :: (forall t. Reflex t => UI t ()) -> IO ()
 mainUI (UI root) = mainWidgetWithHead headWidget root
         where
             headWidget :: MonadWidget t ui => ui ()
             headWidget = do
-                elAttr "meta" ("charset" =: "utf-8") blank
-                elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") blank
+                elAttr "meta" ("charset" =: "utf-8") R.blank
+                elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") R.blank
                 el "style" (text $(embedStringFile "./dist/output.css"))
 
 ---- Layout ------------
@@ -37,7 +38,11 @@ hstack (UI x) = UI $ divClass "flex flex-row flex-wrap justify-evenly gap-8" x
 
 -- | Vertically stack items
 vstack :: UI t a -> UI t a
-vstack (UI x) = UI $ divClass "flex flex-col flex-wrap justify-evenly gap-8" x
+vstack (UI x) = UI $ divClass "flex flex-col flex-wrap gap-8" x
+
+-- | Vertically stack items inside the semantic <form></form> tags
+form :: UI t a -> UI t a
+form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 
 ---- Input -------------
 
@@ -72,20 +77,23 @@ button :: Text -> UI t (Event t ())
 button = button_ []
 {-# INLINE button #-}
 
+---- Dyn ---------------
+
+display :: Show a => Dynamic t a -> UI t ()
+display x = UI (R.dynText (pack . show <$> x))
+
+dynText :: Dynamic t Text -> UI t ()
+dynText x = UI (R.dynText x)
+
+dynIf :: Dynamic t Bool -> UI t a -> UI t a -> UI t (Event t a)
+dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
+
+---- Other -------------
+
+blank :: UI t ()
+blank = return ()
+
 ------------------------
-
-form :: [Text] -- ^ List of label texts and inputs
-     -> Text   -- ^ Submit button text
-     -> UI t (Event t [Text])
-form labels submitText = UI $ elClass "form" "form" do
-    rec
-        inputs <- forM labels $ \labelText -> value <$> do
-                divClass "" do
-                    elClass "label" "label mb-1" $ text labelText
-                    unUI $ input' (inputElementConfig_setValue .~ ("" <$ btnEvt))
-        btnEvt <- unUI $ button submitText
-    return (btnEvt <~~ distributeListOverDyn inputs)
-
 
 (<~~) :: Reflex t => Event t b -> Dynamic t a -> Event t a
 (<~~) = flip tagPromptlyDyn

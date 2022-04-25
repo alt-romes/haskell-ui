@@ -3,14 +3,14 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MonoLocalBinds #-}
-module UI.Extended ( module UI.Extended ) where
+module UI.Extended ( module Reflex.Dom, module UI.Extended ) where
 
 import Data.Text as T (Text, unwords)
 
 import Control.Monad.Fix
-import Reflex.Dom
+import Reflex.Dom hiding (button, display, dynText, blank)
 
-newtype UI t a = UI { unUI :: forall m. MonadWidget t m => m a }
+newtype UI t a = UI { unUI :: forall m. (Reflex t, MonadWidget t m) => m a }
     deriving (Functor)
 
 instance Applicative (UI t) where
