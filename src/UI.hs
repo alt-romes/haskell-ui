@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DeriveTraversable #-}
@@ -88,12 +89,37 @@ dynText x = UI (R.dynText x)
 dynIf :: Dynamic t Bool -> UI t a -> UI t a -> UI t (Event t a)
 dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
 
+---- Routing! ----------
+
+-- Router! Receives an initial value and a function that transforms
+-- values of the same type into UI holding value (route-changing) generating events
+--
+-- Example usage:
+-- @
+--   mainUI $
+--     router "/login" $ \case
+--
+--       "/login" -> do
+--           loginBtnEv <- loginForm
+--           return ("/main" <$ loginEv)
+
+--       "/main" -> do
+--           transition <- mainContent
+--           return transition
+-- 
+--       _ -> do
+--           ev <- button "Return to login"
+--           return ("/login" <$ ev)
+-- @
+router :: Reflex t => a -> (a -> UI t (Event t a)) -> UI t ()
+router initialRoute routerF = UI $ mdo
+    wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
+    return ()
+
 ---- Other -------------
 
 blank :: UI t ()
 blank = return ()
-
-------------------------
 
 (<~~) :: Reflex t => Event t b -> Dynamic t a -> Event t a
 (<~~) = flip tagPromptlyDyn
@@ -104,6 +130,8 @@ infixl 1 <~~
 (~~>) = tagPromptlyDyn
 
 infixr 1 ~~>
+
+------------------------
 
 -- todoListWidget :: MonadWidget t m => Dynamic t [Todo] -> m ()
 -- todoListWidget = void . flip simpleList (elClass "p" "block" . dynText . fmap todoText)
