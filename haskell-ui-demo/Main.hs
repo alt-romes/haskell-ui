@@ -15,6 +15,7 @@ import Cob.RecordM.UI
 import Cob.UserM.UI
 
 import UI.Extended
+import UI.Icons
 import UI
 
 newtype Todo = Todo Text
@@ -59,7 +60,11 @@ mainContent session = do
 
 main :: IO ()
 main = mainUI $ do
-    tabView "Home" ["Home", "Account", "Cart"] $ \case
+    tabView "Home" [("Home", homeO), ("Archive", archiveO), ("Cart", cartO)] True $ \case
+
         "Home" -> text "Welcome home"
-        "Account" -> text "Accounting place"
+
+        "Archive" -> text "Accounting place"
+
         "Cart" -> text "Buying place"
+

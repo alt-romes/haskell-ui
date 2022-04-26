@@ -14,12 +14,13 @@ import Data.FileEmbed
 import Data.Text (Text, pack)
 import Data.Time (NominalDiffTime)
 
-import Control.Monad (forM)
+import Control.Monad (forM, when)
 
 import qualified Reflex.Dom as D
 import Reflex.Network (networkHold)
 
 import UI.Extended
+import UI.Icons
 
 -- | The mainUI function takes a root and renders the app
 mainUI :: (forall t. Reflex t => UI t ()) -> IO ()
@@ -54,14 +55,20 @@ form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 -- | A content-changing tab view at the bottom.
 --
 -- Takes an initial tab, a list of tab names, and a routing function (tab name -> ui)
-tabView :: Reflex t => Text -> [Text] -> (Text -> UI t a) -> UI t ()
-tabView initial ls routing = mdo
+-- The bool indicates whether to display or not the route name under the icon
+tabView :: Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI t ()
+tabView initial ls displayName routing = mdo
     router initial ((leftmost clicks <$) <$> routing)
-    clicks <- contentView $ hstack $ forM ls $ \name -> do
-        click <- button name
-        return (name <$ click) 
+    clicks <- UI $ do
+        elClass "section" "fixed bottom-0 inset-x-0 border-t border-gray/20 bg-white/40 backdrop-blur-md pt-0.5" $ do
+            elClass "ul" "flex justify-evenly" $ do
+                forM ls $ \(name, i) -> do
+                    (li, _) <- elClass' "li" ("flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
+                        unUI $ renderIcon (if displayName then 5 else 6) i
+                        when displayName $
+                           elClass "p" "text-sm" (D.text name) -- only if name is available
+                    return (name <$ domEvent Click li) 
     return ()
-
 
 
 ---- Input -------------
