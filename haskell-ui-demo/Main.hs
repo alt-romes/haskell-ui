@@ -60,11 +60,12 @@ mainContent session = do
 
 main :: IO ()
 main = mainUI $ do
-    tabView "Home" [("Home", homeO), ("Archive", archiveO), ("Cart", cartO)] True $ \case
+    tabView "Listen Now" [("Listen Now", play), ("Archive", heart), ("Cart", heart), ("Search", search)] True $ \case
 
-        "Home" -> text "Welcome home"
+        "Listen Now" -> text "Welcome home"
 
         "Archive" -> text "Accounting place"
 
         "Cart" -> text "Buying place"
 
+        "Search" -> text "Search"

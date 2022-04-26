@@ -26,12 +26,25 @@ cartO = OutlinedI "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
 heartO :: Icon
 heartO = OutlinedI "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" 
 
--- | Render an Icon given a size
---
--- Sizes:
--- h-5 w-5 h-6 w-6
-renderIcon :: Int -> Icon -> UI t ()
-renderIcon size (OutlinedI p) = UI $
-    elDynAttrNS (Just "http://www.w3.org/2000/svg") "svg" (constDyn $ "stroke-width"=:"2" <> "stroke"=:"currentColor" <> "viewBox"=:"0 0 24 24" <> "fill"=:"none" <> "class" =: ("h-" <> pack (show size) <> " w-" <> pack (show size))) $
+heart :: Icon
+heart = FilledI "M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" 
+
+play :: Icon
+play = FilledI "M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" 
+
+search :: Icon
+search = FilledI "M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+
+-- | Render an icon with default values
+renderIcon :: Icon -> UI t ()
+renderIcon (OutlinedI p) = renderIcon' 6 "" (OutlinedI p)
+renderIcon (FilledI p)   = renderIcon' 5 "" (FilledI p)
+
+-- | Render an Icon given a size and additional classes
+renderIcon' :: Int -> Text -> Icon -> UI t ()
+renderIcon' size c (OutlinedI p) = UI $
+    elDynAttrNS (Just "http://www.w3.org/2000/svg") "svg" (constDyn $ "stroke-width"=:"2" <> "stroke"=:"currentColor" <> "viewBox"=:"0 0 24 24" <> "fill"=:"none" <> "class" =: ("h-" <> pack (show size) <> " w-" <> pack (show size) <> " " <> c)) $
         elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "stroke-linejoin"=:"round" <> "stroke-linecap"=:"round") (return ())
-renderIcon _ (FilledI _) = undefined
+renderIcon' size c (FilledI p) = UI $
+    elDynAttrNS (Just "http://www.w3.org/2000/svg") "svg" (constDyn $ "viewBox"=:"0 0 20 20" <> "fill"=:"currentColor" <> "class" =: ("h-" <> pack (show size) <> " w-" <> pack (show size) <> " " <> c)) $
+        elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "fill-rule"=:"evenodd" <> "clip-rule"=:"evenodd") (return ())

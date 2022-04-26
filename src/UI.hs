@@ -60,13 +60,13 @@ tabView :: Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI 
 tabView initial ls displayName routing = mdo
     router initial ((leftmost clicks <$) <$> routing)
     clicks <- UI $ do
-        elClass "section" "fixed bottom-0 inset-x-0 border-t border-gray/20 bg-white/40 backdrop-blur-md pt-0.5" $ do
-            elClass "ul" "flex justify-evenly" $ do
+        elClass "section" "fixed bottom-0 inset-x-0 border-t border-gray/20 bg-slate-100/40 backdrop-blur-md pt-0.5" $ do
+            elClass "ul" ("grid grid-cols-" <> (pack . show . length) ls) $ do
                 forM ls $ \(name, i) -> do
                     (li, _) <- elClass' "li" ("flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
-                        unUI $ renderIcon (if displayName then 5 else 6) i
+                        unUI $ renderIcon' 6 "text-slate-700/70" i
                         when displayName $
-                           elClass "p" "text-sm" (D.text name) -- only if name is available
+                           elClass "p" "text-xs font-light tracking-tight text-slate-600/70" (D.text name) -- only if name is available
                     return (name <$ domEvent Click li) 
     return ()
 
