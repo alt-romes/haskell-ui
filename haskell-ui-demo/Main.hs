@@ -59,54 +59,7 @@ mainContent session = do
 
 main :: IO ()
 main = mainUI $ do
-
-    cobRouter "mimes8.cultofbits.com" (\session -> do
-
-        router "myroute" $ \case
-
-            "myroute" -> contentView $ do
-                text "My route..."
-                click <- button "To main"
-                return ("main" <$ click)
-
-            "main" -> do
-                mainContent session
-                click <- button "To myroute"
-                return ("myroute" <$ click)
-
-        contentView $ hstack $ do
-            toLogout <- button "To logout"
-            toLogin  <- button "To login"
-            return $ leftmost $
-                [ CRLogout <$ toLogout
-                , CRLogin  <$ toLogin
-                ]
-                                      )
-
-    -- router ("/login", Nothing) $ \case
-
-    --     ("/login", Nothing) -> do
-    --         loginEv <- userLoginPage "mimes8.cultofbits.com"
-    --         return ((\case
-    --                     Nothing -> ("/login", Nothing)
-    --                     Just s -> ("/main", Just s)) <$> loginEv
-    --                )
-
-    --     ("/login", Just session) -> do
-    --         text "Already logged in... redirecting to main"
-    --         (("/main", Just session) <$) <$> (after 0.5)
-
-    --     ("/main", Nothing) -> (("/login", Nothing) <$) <$> verySoon
-
-    --     ("/main", Just session) -> do
-    --         mainContent session
-    --         x <- button "Go To Unknown"
-    --         y <- button "Go To Login"
-    --         return $ leftmost [
-    --             (("//", Just session) <$ x),
-    --             (("/login", Just session) <$ y)
-    --                           ]
-
-    --     (_, session) -> do
-    --         x <- button "Unknown"
-    --         return (("/login", session) <$ x)
+    tabView "Home" ["Home", "Account", "Cart"] $ \case
+        "Home" -> text "Welcome home"
+        "Account" -> text "Accounting place"
+        "Cart" -> text "Buying place"

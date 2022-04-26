@@ -12,8 +12,10 @@ module UI ( module UI, UI, Text, NominalDiffTime) where
 
 import Data.FileEmbed
 import Data.Text (Text, pack)
-
 import Data.Time (NominalDiffTime)
+
+import Control.Monad (forM)
+
 import qualified Reflex.Dom as D
 import Reflex.Network (networkHold)
 
@@ -46,6 +48,21 @@ vstack (UI x) = UI $ divClass "flex flex-col flex-wrap gap-8" x
 -- | Vertically stack items inside the semantic <form></form> tags
 form :: UI t a -> UI t a
 form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
+
+---- UI ----------------
+
+-- | A content-changing tab view at the bottom.
+--
+-- Takes an initial tab, a list of tab names, and a routing function (tab name -> ui)
+tabView :: Reflex t => Text -> [Text] -> (Text -> UI t a) -> UI t ()
+tabView initial ls routing = mdo
+    router initial ((leftmost clicks <$) <$> routing)
+    clicks <- contentView $ hstack $ forM ls $ \name -> do
+        click <- button name
+        return (name <$ click) 
+    return ()
+
+
 
 ---- Input -------------
 
