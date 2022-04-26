@@ -9,7 +9,8 @@ import Data.Text as T (Text, unwords)
 
 import Control.Monad.IO.Class
 import Control.Monad.Fix
-import Reflex.Dom hiding (button, display, dynText, blank)
+import Reflex.Dom hiding (button, display, dynText, blank, now, text)
+import qualified Reflex.Dom as D
 
 newtype UI t a = UI { unUI :: forall m. (Reflex t, MonadWidget t m) => m a }
     deriving (Functor)
@@ -68,7 +69,7 @@ input_' attrs confLens = UI $
 
 button_ :: [Attribute] -> Text -> UI t (Event t ())
 button_ attrs t = UI $ do
-    (btn, _) <- elClass' "button" (renderAttrs $ "button":attrs) $ text t
+    (btn, _) <- elClass' "button" (renderAttrs $ "button":attrs) $ D.text t
     return $ domEvent Click btn
 
 ------------------------

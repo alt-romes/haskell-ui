@@ -58,24 +58,55 @@ mainContent session = do
     return ()
 
 main :: IO ()
-main = do
+main = mainUI $ do
 
-    emptyS <- emptySession "mimes8.cultofbits.com"
+    cobRouter "mimes8.cultofbits.com" (\session -> do
 
-    mainUI $ do
+        router "myroute" $ \case
 
-        router' ("/login", emptyS) $ \case
+            "myroute" -> contentView $ do
+                text "My route..."
+                click <- button "To main"
+                return ("main" <$ click)
 
-            ("/login", _) -> do
-                loginEv <- userLoginPage "mimes8.cultofbits.com"
-                return ((\case Nothing -> ("/login",emptyS); Just s -> ("/main",s)) <$> loginEv)
-
-            ("/main", session) -> do
+            "main" -> do
                 mainContent session
-                x <- button "Go To Unknown"
-                y <- button "Go To Login"
-                return ((,session) <$> (("//" <$ x) <> ("/login" <$ y)))
+                click <- button "To myroute"
+                return ("myroute" <$ click)
 
-            (_, session) -> do
-                x <- button "Unknown"
-                return (("/login", session) <$ x)
+        contentView $ hstack $ do
+            toLogout <- button "To logout"
+            toLogin  <- button "To login"
+            return $ leftmost $
+                [ CRLogout <$ toLogout
+                , CRLogin  <$ toLogin
+                ]
+                                      )
+
+    -- router ("/login", Nothing) $ \case
+
+    --     ("/login", Nothing) -> do
+    --         loginEv <- userLoginPage "mimes8.cultofbits.com"
+    --         return ((\case
+    --                     Nothing -> ("/login", Nothing)
+    --                     Just s -> ("/main", Just s)) <$> loginEv
+    --                )
+
+    --     ("/login", Just session) -> do
+    --         text "Already logged in... redirecting to main"
+    --         (("/main", Just session) <$) <$> (after 0.5)
+
+    --     ("/main", Nothing) -> (("/login", Nothing) <$) <$> verySoon
+
+    --     ("/main", Just session) -> do
+    --         mainContent session
+    --         x <- button "Go To Unknown"
+    --         y <- button "Go To Login"
+    --         return $ leftmost [
+    --             (("//", Just session) <$ x),
+    --             (("/login", Just session) <$ y)
+    --                           ]
+
+    --     (_, session) -> do
+    --         x <- button "Unknown"
+    --         return (("/login", session) <$ x)

@@ -8,12 +8,14 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UI ( module UI, UI, Text ) where
+module UI ( module UI, UI, Text, NominalDiffTime) where
 
 import Data.FileEmbed
 import Data.Text (Text, pack)
 
-import qualified Reflex.Dom as R
+import Data.Time (NominalDiffTime)
+import qualified Reflex.Dom as D
+import Reflex.Network (networkHold)
 
 import UI.Extended
 
@@ -23,9 +25,9 @@ mainUI (UI root) = mainWidgetWithHead headWidget root
         where
             headWidget :: MonadWidget t ui => ui ()
             headWidget = do
-                elAttr "meta" ("charset" =: "utf-8") R.blank
-                elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") R.blank
-                el "style" (text $(embedStringFile "./dist/output.css"))
+                elAttr "meta" ("charset" =: "utf-8") D.blank
+                elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") D.blank
+                el "style" (D.text $(embedStringFile "./dist/output.css"))
 
 ---- Layout ------------
 
@@ -48,7 +50,7 @@ form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 ---- Input -------------
 
 label :: Text -> UI t ()
-label t = UI $ elClass "label" "label mb-1" $ text t
+label t = UI $ elClass "label" "label mb-1" $ D.text t
 
 data InputType = IText | IPassword
 
@@ -91,10 +93,10 @@ button = button_ []
 ---- Dyn ---------------
 
 display :: Show a => Dynamic t a -> UI t ()
-display x = UI (R.dynText (pack . show <$> x))
+display x = UI (D.dynText (pack . show <$> x))
 
 dynText :: Dynamic t Text -> UI t ()
-dynText x = UI (R.dynText x)
+dynText x = UI (D.dynText x)
 
 dynIf :: Dynamic t Bool -> UI t a -> UI t a -> UI t (Event t a)
 dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
@@ -103,6 +105,10 @@ dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
 
 -- | Router! Receives an initial value and a function that transforms
 -- values of the same type into UI holding value (route-changing) generating events
+--
+-- The holding value can be used to pass state around the router
+--
+-- Note: Using the event 'now' here seems to cause problems. Use a small 'timer' or 'next' instead.
 --
 -- Example usage:
 -- @
@@ -121,17 +127,36 @@ dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
 --           ev <- button "Return to login"
 --           return ("/login" <$ ev)
 -- @
+--
+-- Example usage of the router! with state:
+--
+-- @
+-- main :: IO ()
+-- main = mainUI $ do
+--
+--     router' ("/login", Nothing) $ \case
+--
+--         ("/login", Nothing) -> do
+--             loginEv <- userLoginPage "xyi"
+--             return ((\case Nothing -> ("/login", Nothing); Just s -> ("/main", Just s)) <$> loginEv)
+--
+--         ("/login", Just session) -> return (("/main", Just session) <$ now)
+--
+--         ("/main", Nothing) -> return (("/login", Nothing) <$ now)
+--
+--         ("/main", Just session) -> do
+--             mainContent session
+--             x <- button "Go To Unknown"
+--             y <- button "Go To Login"
+--             return ((, Just session) <$> (("//" <$ x) <> ("/login" <$ y)))
+--
+--         (_, session) -> do
+--             x <- button "Unknown"
+--             return (("/login", session) <$ x)
+-- @
 router :: a -> (a -> UI t (Event t a)) -> UI t ()
 router initialRoute routerF = UI $ mdo
-    wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
-    return ()
-
--- | Router! with state.
---
--- As @router@, but an additional @state@ is carried accross routes
-router' :: (a, state) -> ((a, state) -> UI t (Event t (a, state))) -> UI t ()
-router' initialRoute routerF = UI $ mdo
-    wow <- fmap (fmap routerF) <$> widgetHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
+    wow <- fmap (fmap routerF) <$> networkHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
     return ()
 
 -- | Start at a UI returning an Event that when triggered will pass the value to
@@ -147,14 +172,33 @@ router' initialRoute routerF = UI $ mdo
 -- @
 path :: UI t (Event t a) -> (a -> UI t b) -> UI t ()
 path (UI g) f = UI $ mdo
-    pathEv <- widgetHold g ((never <$) . unUI . f <$> switchDyn pathEv)
+    pathEv <- networkHold g ((never <$) . unUI . f <$> switchDyn pathEv)
     return ()
 
 
 ---- Other -------------
 
+text :: Text -> UI t ()
+text x = UI (D.text x)
+
 blank :: UI t ()
 blank = return ()
+
+-- | Fire an event every X seconds
+timer :: NominalDiffTime -> UI t (Event t ())
+timer x = UI ((() <$) <$> tickLossyFromPostBuildTime x)
+
+-- | Fire an event /now/
+now :: UI t (Event t ())
+now = UI D.now
+
+-- | Fires an event very soon
+verySoon :: UI t (Event t ())
+verySoon = UI (unUI (timer 0.00000001) >>= headE)
+
+-- | Fires an event after X seconds
+after :: NominalDiffTime -> UI t (Event t ())
+after t = UI (unUI (timer t) >>= headE)
 
 (<~~) :: Reflex t => Event t b -> Dynamic t a -> Event t a
 (<~~) = flip tagPromptlyDyn
