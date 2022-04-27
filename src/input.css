@@ -4,7 +4,7 @@
 
 @layer base {
     body {
-        @apply overflow-hidden /* To use overflow use a scroll view */ 
+        @apply overflow-hidden /* To overflow use a scroll view */
     }
 }
 
@@ -30,4 +30,19 @@
         @apply border border-gray-300 px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
     }
 
+}
+
+.root.flex.flex-col.h-screen > * {
+    @apply flex-1 overflow-hidden /* All sub-items need overflow-hidden so that
+                                    they don't take the header or footer out of the screen. Use
+                                    overflow-y-scroll to scroll the content */
+}
+
+.root.flex.flex-col.h-screen > .scroll-view {
+    @apply overflow-y-scroll /* All sub-items with overflow-y-scroll should override the hidden above
+                                This selector should have the same or more priority */
+}
+
+.root.flex.flex-col.h-screen > header, .root.flex.flex-col.h-screen > footer {
+    @apply flex-none /* Disable flex-1 for the header and footer, meaning everything else will take the space in between*/
 }

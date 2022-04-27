@@ -16,7 +16,7 @@ import Data.Text (Text, pack)
 import Data.Time (NominalDiffTime)
 import Data.Bifunctor (second)
 
-import Control.Monad (forM, when)
+import Control.Monad (forM, when, forM_)
 
 import qualified Reflex.Dom as D
 import Reflex.Network (networkHold)
@@ -26,13 +26,14 @@ import UI.Icons
 
 -- | The mainUI function takes a root and renders the app
 mainUI :: (forall t. Reflex t => UI t ()) -> IO ()
-mainUI (UI root) = mainWidgetWithHead headWidget root
-        where
-            headWidget :: MonadWidget t ui => ui ()
-            headWidget = do
-                elAttr "meta" ("charset" =: "utf-8") D.blank
-                elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") D.blank
-                el "style" (D.text $(embedStringFile "./dist/output.css"))
+mainUI (UI root) = mainWidgetWithHead headWidget $ do
+    divClass "flex flex-col h-screen overflow-hidden root" root
+    where
+        headWidget :: MonadWidget t ui => ui ()
+        headWidget = do
+            elAttr "meta" ("charset" =: "utf-8") D.blank
+            elAttr "meta" ("name" =: "viewport" <> "content" =: "width=device-width, initial-scale=1") D.blank
+            el "style" (D.text $(embedStringFile "./dist/output.css"))
 
 ---- Layout ------------
 
@@ -53,28 +54,39 @@ form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 
 ---- UI ----------------
 
--- | A container with extra padding, used for contents
+-- | A view for your content: a container with extra padding
 contentView :: UI t a -> UI t a
 contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5" x
 
-data NavigationView = Top | Nested Text
+-- | Scroll view ensures that overflowing content can be
+-- reached. If the content exceeds the page limit, it'll be hidden, however,
+-- with scroll view, scrolling is enabled so you can scroll down to the end of
+-- the content
+scrollView :: UI t a -> UI t a
+scrollView (UI x) = UI $ divClass "scroll-smooth overflow-y-scroll scroll-view" x
+
+data NavigationView = Top | Nested (Maybe Text)
+
+-- | A 'NavigationTitle' is used to specify how the navigation title should be
+-- displayed in a 'navigationView'
+-- data NavigationTitle = NoNT
+--                      | TopNT Text
+--                      | FullNT Text
+
 -- | A view for presenting a stack of views that represents a visiblee path in
 -- a navigatioin hierarchy.
 --
 -- Inspired by SwiftUI
 -- 
 -- Receives the name of the navigation view and a widget that on an event
--- creates another widget and the text naming that widget
-navigationView :: Reflex t => Text -> UI t (Event t (UI t a, Text)) -> UI t ()
+-- creates another widget and the text naming that widget, if said to create widget has a name
+navigationView :: Reflex t => Text -> UI t (Event t (UI t a, Maybe Text)) -> UI t ()
 navigationView title topView = do
     router (error "The top view should be rendered statically", Top) $ \case
-        (_, Top) -> do
-            navigationTitle title
-            fmap (second Nested) <$> topView
+        (_, Top) -> fmap (second Nested) <$> topView
         (view, Nested t) -> do
-            back <- button "back"
-            navigationTitle t
-            -- Todo backtack rathe than always go to top
+            back <- navigationBar (Just title) t
+            -- todo: backtrack rather than always go to top
             ((error "The top view should be rendered statically", Top) <$ back) <$ view
     return ()
 
@@ -86,10 +98,10 @@ tabView :: Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI 
 tabView initial ls displayName routing = mdo
     router initial ((clicks <$) <$> routing)
     clicks <- leftmost <$> UI do
-        elClass "section" "fixed bottom-0 inset-x-0 border-t border-neutral-200 backdrop-blur-md pt-0.5 px-2" $ do
+        elClass "footer" "inset-x-0 border-t border-neutral-200 bg-white/40 backdrop-blur-md pt-0.5 px-2" $ do
             elClass "ul" ("grid grid-cols-" <> (pack . show . length) ls) $ do
                 forM ls $ \(name, i) -> mdo
-                    (li, _) <- elClass' "li" ("flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
+                    (li, _) <- elClass' "li" ("cursor-pointer flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
                         itemClass <- holdDyn (if initial == name then "text-red-500" else "text-neutral-900/50")
                                         ((\x -> if x == name then "text-red-500" else "text-neutral-900/50") <$> clicks)
                         unUI $ renderIcon' 6 itemClass i
@@ -102,6 +114,22 @@ tabView initial ls displayName routing = mdo
 
 navigationTitle :: Text -> UI t ()
 navigationTitle t = UI $ elClass "h1" "text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
+
+-- | Create a navigation bar with a back button (with the first argument), a
+-- top title (the second argument) that fires the resulting event when the back button is clicked
+navigationBar :: Maybe Text -> Maybe Text -> UI t (Event t ())
+navigationBar backText titleText = UI do
+    elClass "header" "inset-x-0 border-b border-neutral-200 bg-white/40 backdrop-blur-md px-2 py-2" $ do
+        elClass "div" "grid grid-cols-6" $ do
+            svg <- unUI $ renderIcon'' 6 "cursor-pointer col-span-1 text-red-500" chevronLeftO
+            forM_ titleText (elClass "p" "font-semibold text-center text-neutral-900 col-span-4 text-ellipsis overflow-hidden" . D.text)
+            return (domEvent Click svg)
+
+-- | Create a navigation bar without a back button, so basically just a top bar
+-- with a title
+-- navigationBar' :: Maybe Text -> UI t ()
+-- navigationBar' titleText = UI do
+
 
 label :: Text -> UI t ()
 label t = UI $ elClass "label" "label mb-1" $ D.text t
@@ -130,14 +158,14 @@ input' = input_' []
 
 -- | Simple Input with a Label
 inputL :: Text -> UI t (Dynamic t Text)
-inputL t = UI $ divClass "" $ unUI $ do
+inputL t = UI $ el "div" $ unUI $ do
     label t
     input
 
 -- | Simple Input with a label.
 -- The input value is cleared when the @Event@ fires.
 inputLC :: Text -> Event t a -> UI t (Dynamic t Text)
-inputLC t evt = UI $ divClass "" $ unUI $ do
+inputLC t evt = UI $ el "div" $ unUI $ do
     label t
     value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
 

@@ -56,22 +56,57 @@ mainContent session = do
 
     return ()
 
-searchPage = do
+searchPage = vstack $ do
     input
     input
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
+    button "Search"
 
 main :: IO ()
 main = mainUI $ do
 
-    tabView "Listen Now" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
+    tabView "Browse" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
 
         $ \case
 
-            "Listen Now" -> contentView $
-                navigationView "Listen Now" $ do
-                    val <- inputL "Name the song you want to hear"
-                    click <- button "Search"
-                    return (click <~~ (searchPage,) . ("Found: " <>) <$> val)
+            "Listen Now" ->
+                navigationView "Listen Now" $ scrollView $ contentView $ do
+                    navigationTitle "Listen Now"
+                    vstack $ do
+                        val <- inputL "Name the song you want to hear"
+                        click <- button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        button "Search"
+                        return (click <~~ (scrollView $ contentView searchPage,) . Just <$> val)
 
             "Browse" -> contentView $
                 navigationTitle  "Browse"

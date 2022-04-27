@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 module UI.Icons where
@@ -46,6 +47,9 @@ collection = FilledI "M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0
 statusOnlineO :: Icon
 statusOnlineO = OutlinedI "M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z" 
 
+chevronLeftO :: Icon
+chevronLeftO = OutlinedI "M15 19l-7-7 7-7" 
+
 -- todo: scrape the svgs or use TH to find 'em?
 
 
@@ -56,8 +60,12 @@ renderIcon (FilledI p)   = renderIcon' 5 "" (FilledI p)
 
 -- | Render an Icon given a size and additional classes
 renderIcon' :: Reflex t => Int -> Dynamic t Text -> Icon -> UI t ()
-renderIcon' size c (OutlinedI p) = UI $
-    elDynAttrNS (Just "http://www.w3.org/2000/svg") "svg" dAttrs $
+renderIcon' size c = (() <$) . renderIcon'' size c
+
+-- | Like renderIcon' but return the @svg@ element
+renderIcon'' :: Reflex t => Int -> Dynamic t Text -> Icon -> UI t (Element EventResult GhcjsDomSpace t)
+renderIcon'' size c (OutlinedI p) = UI $
+    fst <$> elDynAttrNS' (Just "http://www.w3.org/2000/svg") "svg" dAttrs do
         elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "stroke-linejoin"=:"round" <> "stroke-linecap"=:"round") (return ())
     where
       sAttrs :: M.Map Text Text
@@ -68,8 +76,8 @@ renderIcon' size c (OutlinedI p) = UI $
       dAttrs = (\dc -> sAttrs <> ( "class" =: (sizeClasses <> dc) )) <$> c
 
 
-renderIcon' size c (FilledI p) = UI $
-    elDynAttrNS (Just "http://www.w3.org/2000/svg") "svg" dAttrs $
+renderIcon'' size c (FilledI p) = UI $
+    fst <$> elDynAttrNS' (Just "http://www.w3.org/2000/svg") "svg" dAttrs do
         elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "fill-rule"=:"evenodd" <> "clip-rule"=:"evenodd") (return ())
     where
       sAttrs :: M.Map Text Text
