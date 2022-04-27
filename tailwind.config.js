@@ -1,7 +1,11 @@
 module.exports = {
     content: ["./src/**/*.hs", "./app/**/*.hs", "./*.hs"],
     theme: {
-        extend: {},
+        extend: {
+            fontSize: {
+                '2xs': ['0.7rem', '1rem']
+            }
+        },
     },
     plugins: [],
     safelist: [

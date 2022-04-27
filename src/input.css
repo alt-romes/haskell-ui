@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+    body {
+        @apply overflow-hidden /* To use overflow use a scroll view */ 
+    }
+}
+
 @layer components {
 
     .card {

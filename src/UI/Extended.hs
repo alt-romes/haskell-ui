@@ -1,6 +1,9 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE PolyKinds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MonoLocalBinds #-}
 module UI.Extended ( module Reflex.Dom, module UI.Extended ) where
@@ -9,9 +12,11 @@ import Data.Text as T (Text, unwords)
 
 import Control.Monad.IO.Class
 import Control.Monad.Fix
+import Reflex.Dom.Builder.Class
 import Reflex.Dom hiding (button, display, dynText, blank, now, text)
 import qualified Reflex.Dom as D
 
+-- type UI :: x -> * -> * -- TODO:
 newtype UI t a = UI { unUI :: forall m. (Reflex t, MonadWidget t m) => m a }
     deriving (Functor)
 
@@ -27,6 +32,8 @@ instance MonadFix (UI t) where
 
 instance MonadIO (UI t) where
     liftIO x = UI $ liftIO x
+
+-- instance DomBuilder t (UI t) where -- TODO:
 
 data Side = T | R | B | L
 

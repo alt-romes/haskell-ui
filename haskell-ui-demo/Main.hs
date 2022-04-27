@@ -21,11 +21,9 @@ import UI
 newtype Todo = Todo Text
 mkRecord ''Todo "ROMES Todos" ["Todo"]
 
+
 data Movie = Movie Text Text Text Text
 mkRecord ''Movie "ROMES Watched Movies" ["Movie", "Year", "Director", "Rating"]
-
-loginForm :: UI t (Event t ())
-loginForm = button "Hi"
 
 mainContent :: Reflex t => CobSession -> UI t ()
 mainContent session = do
@@ -58,14 +56,33 @@ mainContent session = do
 
     return ()
 
+searchPage = do
+    input
+    input
+
 main :: IO ()
 main = mainUI $ do
-    tabView "Listen Now" [("Listen Now", play), ("Archive", heart), ("Cart", heart), ("Search", search)] True $ \case
 
-        "Listen Now" -> text "Welcome home"
+    tabView "Listen Now" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
 
-        "Archive" -> text "Accounting place"
+        $ \case
 
-        "Cart" -> text "Buying place"
+            "Listen Now" -> contentView $
+                navigationView "Listen Now" $ do
+                    val <- inputL "Name the song you want to hear"
+                    click <- button "Search"
+                    return (click <~~ (searchPage,) . ("Found: " <>) <$> val)
 
-        "Search" -> text "Search"
+            "Browse" -> contentView $
+                navigationTitle  "Browse"
+
+            "Radio" -> contentView $
+                navigationTitle  "Radio"
+
+            "Library" -> contentView $
+                navigationTitle  "Library"
+
+            "Search" -> contentView $
+                navigationTitle  "Search"
+
+            _ -> error "unknown route"

@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE GADTs #-}
@@ -13,6 +14,7 @@ module UI ( module UI, UI, Text, NominalDiffTime) where
 import Data.FileEmbed
 import Data.Text (Text, pack)
 import Data.Time (NominalDiffTime)
+import Data.Bifunctor (second)
 
 import Control.Monad (forM, when)
 
@@ -34,9 +36,8 @@ mainUI (UI root) = mainWidgetWithHead headWidget root
 
 ---- Layout ------------
 
--- | A centered container
-contentView :: UI t a -> UI t a
-contentView (UI x) = UI $ divClass "container mx-auto py-6 px-4" x
+container :: UI t a -> UI t a
+container (UI x) = UI $ divClass "container mx-auto py-2 px-2" x
 
 -- | Horizontally stack items
 hstack :: UI t a -> UI t a
@@ -52,29 +53,66 @@ form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 
 ---- UI ----------------
 
+-- | A container with extra padding, used for contents
+contentView :: UI t a -> UI t a
+contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5" x
+
+data NavigationView = Top | Nested Text
+-- | A view for presenting a stack of views that represents a visiblee path in
+-- a navigatioin hierarchy.
+--
+-- Inspired by SwiftUI
+-- 
+-- Receives the name of the navigation view and a widget that on an event
+-- creates another widget and the text naming that widget
+navigationView :: Reflex t => Text -> UI t (Event t (UI t a, Text)) -> UI t ()
+navigationView title topView = do
+    router (error "The top view should be rendered statically", Top) $ \case
+        (_, Top) -> do
+            navigationTitle title
+            fmap (second Nested) <$> topView
+        (view, Nested t) -> do
+            back <- button "back"
+            navigationTitle t
+            -- Todo backtack rathe than always go to top
+            ((error "The top view should be rendered statically", Top) <$ back) <$ view
+    return ()
+
 -- | A content-changing tab view at the bottom.
 --
 -- Takes an initial tab, a list of tab names, and a routing function (tab name -> ui)
 -- The bool indicates whether to display or not the route name under the icon
 tabView :: Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI t ()
 tabView initial ls displayName routing = mdo
-    router initial ((leftmost clicks <$) <$> routing)
-    clicks <- UI $ do
-        elClass "section" "fixed bottom-0 inset-x-0 border-t border-gray/20 bg-slate-100/40 backdrop-blur-md pt-0.5" $ do
+    router initial ((clicks <$) <$> routing)
+    clicks <- leftmost <$> UI do
+        elClass "section" "fixed bottom-0 inset-x-0 border-t border-neutral-200 backdrop-blur-md pt-0.5 px-2" $ do
             elClass "ul" ("grid grid-cols-" <> (pack . show . length) ls) $ do
-                forM ls $ \(name, i) -> do
+                forM ls $ \(name, i) -> mdo
                     (li, _) <- elClass' "li" ("flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
-                        unUI $ renderIcon' 6 "text-slate-700/70" i
+                        itemClass <- holdDyn (if initial == name then "text-red-500" else "text-neutral-900/50")
+                                        ((\x -> if x == name then "text-red-500" else "text-neutral-900/50") <$> clicks)
+                        unUI $ renderIcon' 6 itemClass i
                         when displayName $
-                           elClass "p" "text-xs font-light tracking-tight text-slate-600/70" (D.text name) -- only if name is available
-                    return (name <$ domEvent Click li) 
+                           elDynClass "p" (("text-center truncate overflow-hidden text-2xs tracking-tight " <>) <$> itemClass) (D.text name)
+                    return (name <$ domEvent Click li)
     return ()
 
+---- Text --------------
 
----- Input -------------
+navigationTitle :: Text -> UI t ()
+navigationTitle t = UI $ elClass "h1" "text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
 
 label :: Text -> UI t ()
 label t = UI $ elClass "label" "label mb-1" $ D.text t
+
+display :: Show a => Dynamic t a -> UI t ()
+display x = UI (D.dynText (pack . show <$> x))
+
+dynText :: Dynamic t Text -> UI t ()
+dynText x = UI (D.dynText x)
+
+---- Input -------------
 
 data InputType = IText | IPassword
 
@@ -115,12 +153,6 @@ button = button_ []
 {-# INLINE button #-}
 
 ---- Dyn ---------------
-
-display :: Show a => Dynamic t a -> UI t ()
-display x = UI (D.dynText (pack . show <$> x))
-
-dynText :: Dynamic t Text -> UI t ()
-dynText x = UI (D.dynText x)
 
 dynIf :: Dynamic t Bool -> UI t a -> UI t a -> UI t (Event t a)
 dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
