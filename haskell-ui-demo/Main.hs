@@ -85,28 +85,33 @@ main = mainUI $ do
             "Listen Now" ->
                 navigationView "Listen Now" $ scrollView $ contentView $ do
                     navigationTitle "Listen Now"
+                    hstack $ do
+                        button "hii"
+                        spacer
+                        button "ho"
+                    ev <- vstack $ do
+                        val <- inputL "Name the song you want to hear"
+                        spacer
+                        click <- button "Search"
+                        return (click <~~ (scrollView $ contentView searchPage,) . Just <$> val)
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
                     vstack $ do
                         val <- inputL "Name the song you want to hear"
+                        spacer
                         click <- button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
-                        button "Search"
                         return (click <~~ (scrollView $ contentView searchPage,) . Just <$> val)
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    navigationTitle "Listen Now"
+                    return ev
 
             "Browse" -> contentView $
                 navigationTitle  "Browse"

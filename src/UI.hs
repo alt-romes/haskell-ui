@@ -46,7 +46,10 @@ hstack (UI x) = UI $ divClass "flex flex-row flex-wrap justify-evenly gap-8" x
 
 -- | Vertically stack items
 vstack :: UI t a -> UI t a
-vstack (UI x) = UI $ divClass "flex flex-col flex-wrap gap-8" x
+vstack (UI x) = UI $ divClass "flex-1 flex flex-col flex-wrap gap-8 h-auto" x
+
+spacer :: UI t ()
+spacer = UI $ divClass "flex-1" D.blank
 
 -- | Vertically stack items inside the semantic <form></form> tags
 form :: UI t a -> UI t a
@@ -54,11 +57,17 @@ form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 
 ---- UI ----------------
 
--- | A view for your content: a container with extra padding
+-- | A view for your content.
+-- At the moment, for vstack with spacers to work correctly, 'contentView'
+-- should be the parent element
 contentView :: UI t a -> UI t a
-contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5" x
+contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5 h-full flex flex-col" x
 
--- | Scroll view ensures that overflowing content can be
+-- | Scroll view!
+--
+-- Use a scroll view to scroll your content.
+--
+-- It ensures that overflowing content can be
 -- reached. If the content exceeds the page limit, it'll be hidden, however,
 -- with scroll view, scrolling is enabled so you can scroll down to the end of
 -- the content

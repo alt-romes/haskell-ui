@@ -807,6 +807,14 @@ body {
   height: 83.333333%;
 }
 
+.h-full {
+  height: 100%;
+}
+
+.h-auto {
+  height: auto;
+}
+
 .max-h-1 {
   max-height: 0.25rem;
 }
@@ -1167,6 +1175,10 @@ body {
   width: 91.666667%;
 }
 
+.w-full {
+  width: 100%;
+}
+
 .max-w-2xl {
   max-width: 42rem;
 }
@@ -1189,6 +1201,10 @@ body {
 
 .max-w-7xl {
   max-width: 80rem;
+}
+
+.flex-1 {
+  flex: 1 1 0%;
 }
 
 .cursor-pointer {
