@@ -17,6 +17,8 @@ import Data.Time (NominalDiffTime)
 import Data.Bifunctor (second)
 
 import Control.Monad (forM, when, forM_)
+import Control.Monad.IO.Class (liftIO)
+import System.Random (randomIO)
 
 import qualified Reflex.Dom as D
 import Reflex.Network (networkHold)
@@ -37,31 +39,43 @@ mainUI (UI root) = mainWidgetWithHead headWidget $ do
 
 ---- Layout ------------
 
-container :: UI t a -> UI t a
-container (UI x) = UI $ divClass "container mx-auto py-2 px-2" x
+paddingContainer :: UI t a -> UI t a
+paddingContainer (UI x) = UI $ divClass "p-2" x
 
 -- | Horizontally stack items
 hstack :: UI t a -> UI t a
-hstack (UI x) = UI $ divClass "flex flex-row flex-wrap justify-evenly gap-8" x
+hstack (UI x) = UI $ divClass "flex flex-row flex-nowrap justify-evenly gap-8" x
 
 -- | Vertically stack items
 vstack :: UI t a -> UI t a
-vstack (UI x) = UI $ divClass "flex-1 flex flex-col flex-wrap gap-8 h-auto" x
+vstack (UI x) = UI $ divClass "flex flex-col gap-4 h-auto" x
+
+-- | Vertically stack items with the given gap in between elements.
+-- Available gap sizes are 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8... 24
+-- The intermediate initial values aren't currently available...
+vstack' :: Int -> UI t a -> UI t a
+vstack' size (UI x) = UI $ divClass ("flex flex-col h-auto gap-" <> (pack . show) size) x
 
 spacer :: UI t ()
 spacer = UI $ divClass "flex-1" D.blank
 
+list :: Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Dynamic t [b])
+list l f = UI do
+    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list" do
+        D.simpleList l (unUI . f)
+
 -- | Vertically stack items inside the semantic <form></form> tags
-form :: UI t a -> UI t a
-form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
+-- form :: UI t a -> UI t a
+-- form (UI x) = UI $ elClass "form" "flex flex-col flex-wrap gap-8" x
 
 ---- UI ----------------
 
--- | A view for your content.
--- At the moment, for vstack with spacers to work correctly, 'contentView'
--- should be the parent element
-contentView :: UI t a -> UI t a
-contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5 h-full flex flex-col" x
+-- DEPRECATED! TODO del
+-- -- | A view for your content.
+-- -- At the moment, for vstack with spacers to work correctly, 'contentView'
+-- -- should be the parent element
+-- contentView :: UI t a -> UI t a
+-- contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5 h-full flex flex-col" x
 
 -- | Scroll view!
 --
@@ -122,7 +136,24 @@ tabView initial ls displayName routing = mdo
 ---- Text --------------
 
 navigationTitle :: Text -> UI t ()
-navigationTitle t = UI $ elClass "h1" "text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
+navigationTitle t = UI do
+    -- rid <- ("navtitlebar" <>) . pack . show @Int . abs <$> liftIO randomIO
+    -- elAttr "header" ("id"=:rid) do
+        -- el "div" do -- Styles were added to `div` and `h1` based on whether
+                    -- the head is navigationTitleAsTitle or AsHeader (See
+                    -- src/input.css)
+            elClass "h1" "px-4 pt-6 pb-2 text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
+            -- el "script" do
+            --     D.text $
+            --         "let observer = new IntersectionObserver(entries => { entries.forEach(entry => {\
+            --         \    entry.target.classList.toggle('navigationTitleAsTitle', entry.isIntersecting);\
+            --         \    entry.target.classList.toggle('navigationTitleAsHeader', !entry.isIntersecting);\
+            --         \}) }, {threshold: 1.0});\
+            --         \observer.observe(document.querySelector('#" <> rid <> "'));\
+            --         \ "
+
+
+-- TODO: Unify navigationBar and navigationTitle
 
 -- | Create a navigation bar with a back button (with the first argument), a
 -- top title (the second argument) that fires the resulting event when the back button is clicked
@@ -131,7 +162,7 @@ navigationBar backText titleText = UI do
     elClass "header" "inset-x-0 border-b border-neutral-200 bg-white/40 backdrop-blur-md px-2 py-2" $ do
         elClass "div" "grid grid-cols-6" $ do
             svg <- unUI $ renderIcon'' 6 "cursor-pointer col-span-1 text-red-500" chevronLeftO
-            forM_ titleText (elClass "p" "font-semibold text-center text-neutral-900 col-span-4 text-ellipsis overflow-hidden" . D.text)
+            forM_ titleText (elClass "h1" "font-semibold text-center text-neutral-900 col-span-4 text-ellipsis overflow-hidden". D.text)
             return (domEvent Click svg)
 
 -- | Create a navigation bar without a back button, so basically just a top bar
@@ -142,6 +173,18 @@ navigationBar backText titleText = UI do
 
 label :: Text -> UI t ()
 label t = UI $ elClass "label" "label mb-1" $ D.text t
+
+-- | Label with an Icon
+labelI :: Icon -> Text -> UI t ()
+labelI i t = UI $ elClass "label" "label mb-1 flex items-center gap-2" $ do
+    el "span" $ unUI $ renderIcon' 5 "" i
+    D.text t
+
+-- | Label with dynamic text and an Icon
+labelI' :: Icon -> Dynamic t Text -> UI t ()
+labelI' i t = UI $ elClass "label" "label mb-1 flex flex-nowrap items-center gap-2" $ do
+    el "span" $ unUI $ renderIcon' 5 "" i
+    D.dynText t
 
 display :: Show a => Dynamic t a -> UI t ()
 display x = UI (D.dynText (pack . show <$> x))

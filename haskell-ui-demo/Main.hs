@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE LambdaCase #-}
@@ -8,6 +9,7 @@ module Main where
 import qualified Data.Text as T
 
 import Control.Monad.IO.Class
+import Control.Monad (forM_)
 
 import Cob
 import Cob.RecordM.TH
@@ -27,7 +29,7 @@ mkRecord ''Movie "ROMES Watched Movies" ["Movie", "Year", "Director", "Rating"]
 
 mainContent :: Reflex t => CobSession -> UI t ()
 mainContent session = do
-    contentView $ do
+    -- contentView $ do
 
         hstack $ do
 
@@ -54,7 +56,7 @@ mainContent session = do
                 click <- button "Add Todo"
                 rmAddInstances (click <~~ Todo <$> val) session
 
-    return ()
+        return ()
 
 searchPage = vstack $ do
     input
@@ -75,6 +77,18 @@ searchPage = vstack $ do
     button "Search"
     button "Search"
 
+cardView :: Reflex t => Dynamic t Int -> Dynamic t Text -> UI t ()
+cardView x y = paddingContainer $ vstack' 1 $ do
+    hstack $ do
+        text "Design"
+        spacer
+    spacer
+    hstack $ do
+        labelI' userGroupO (T.pack . show <$> x)
+        spacer
+        labelI' clockO y
+
+
 main :: IO ()
 main = mainUI $ do
 
@@ -83,7 +97,7 @@ main = mainUI $ do
         $ \case
 
             "Listen Now" ->
-                navigationView "Listen Now" $ scrollView $ contentView $ do
+                navigationView "Listen Now" $ scrollView $ do
                     navigationTitle "Listen Now"
                     hstack $ do
                         button "hii"
@@ -93,7 +107,7 @@ main = mainUI $ do
                         val <- inputL "Name the song you want to hear"
                         spacer
                         click <- button "Search"
-                        return (click <~~ (scrollView $ contentView searchPage,) . Just <$> val)
+                        return (click <~~ (scrollView $ searchPage,) . Just <$> val)
                     navigationTitle "Listen Now"
                     navigationTitle "Listen Now"
                     navigationTitle "Listen Now"
@@ -107,22 +121,42 @@ main = mainUI $ do
                         val <- inputL "Name the song you want to hear"
                         spacer
                         click <- button "Search"
-                        return (click <~~ (scrollView $ contentView searchPage,) . Just <$> val)
+                        return (click <~~ (scrollView $ searchPage,) . Just <$> val)
                     navigationTitle "Listen Now"
                     navigationTitle "Listen Now"
                     navigationTitle "Listen Now"
                     return ev
 
-            "Browse" -> contentView $
+            "Browse" -> scrollView do
                 navigationTitle  "Browse"
+                let l = constDyn $ [(14, "Ok"),(15, "Ok"),(16, "Not Ok")]
+                list l $ \i -> do
+                    cardView (fst <$> i) (snd <$> i)
+                vstack do
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                    button "rch"
+                return ()
 
-            "Radio" -> contentView $
+            "Radio" -> 
                 navigationTitle  "Radio"
 
-            "Library" -> contentView $
+            "Library" -> 
                 navigationTitle  "Library"
 
-            "Search" -> contentView $
+            "Search" -> 
                 navigationTitle  "Search"
 
             _ -> error "unknown route"

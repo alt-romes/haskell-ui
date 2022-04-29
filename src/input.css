@@ -46,3 +46,23 @@
 .root.flex.flex-col.h-screen > header, .root.flex.flex-col.h-screen > footer {
     @apply flex-none /* Disable flex-1 for the header and footer, meaning everything else will take the space in between*/
 }
+
+.list.flex.flex-col > * {
+    @apply pr-4 /* List applies a left padding on the main container, and all its children must apply the left padding */
+}
+
+.navigationTitleAsTitle > div > h1 {
+    @apply px-4 pt-6 pb-2 text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3 navigation-view
+}
+
+.navigationTitleAsHeader {
+    @apply inset-x-0 border-b border-neutral-200 bg-white/40 backdrop-blur-md px-2 py-2
+}
+
+.navigationTitleAsHeader > div {
+    @apply grid grid-cols-6
+}
+
+.navigationTitleAsHeader > div > h1 {
+    @apply font-semibold text-center text-neutral-900 col-span-4 text-ellipsis overflow-hidden
+}

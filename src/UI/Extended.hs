@@ -13,7 +13,7 @@ import Data.Text as T (Text, unwords)
 import Control.Monad.IO.Class
 import Control.Monad.Fix
 import Reflex.Dom.Builder.Class
-import Reflex.Dom hiding (button, display, dynText, blank, now, text)
+import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simpleList)
 import qualified Reflex.Dom as D
 
 -- type UI :: x -> * -> * -- TODO:
