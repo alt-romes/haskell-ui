@@ -6,6 +6,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Data.Text (pack)
 import qualified Data.Text as T
 
 import Control.Monad.IO.Class
@@ -16,13 +17,15 @@ import Cob.RecordM.TH
 import Cob.RecordM.UI
 import Cob.UserM.UI
 
+import UI.Layout
+import UI.Text
 import UI.Theme
 import UI.Class
 import UI.Icons
 import UI
 
-newtype Todo = Todo Text
-mkRecord ''Todo "ROMES Todos" ["Todo"]
+data Album = Album { cover :: Text, album :: Text, artist :: Text } deriving Show
+mkRecord ''Album "ROMES Albums" ["Cover", "Album", "Artist"]
 
 data Artist = Artist { url :: Text, name :: Text } deriving Show
 mkRecord ''Artist "ROMES Artists" ["Picture", "Name"]
@@ -61,8 +64,11 @@ ui session = do
                              libraryMenuItem
                              
                 heading "Recently Added"
-                -- gridY 2 ()
-                return evs
+
+                albums <- rmDefinitionInstances ("*" :: String) session
+                evs2 <- gridYE 2 albums recentlyAddedItem
+
+                return (leftmost [evs, evs2])
 
 
             "Search" -> 
@@ -71,13 +77,22 @@ ui session = do
             _ -> error "unknown route"
     return never
     where
+        recentlyAddedItem :: Reflex t => Dynamic t Album -> UI t (UI t (), Maybe Text)
+        recentlyAddedItem dalbum = vstack do
+            imageD (cover <$> dalbum)
+            dynText (album <$> dalbum)
+            dynText (artist <$> dalbum)
+            return (albumView dalbum, Nothing)
+
+        albumView :: Reflex t => Dynamic t Album -> UI t ()
+        albumView dalbum = label "Album" $ dynText (pack . show <$> dalbum)
 
         libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t (), Maybe Text)
         libraryMenuItem (t, i) = paddingYContainer $ hstack do
             renderIcon' 6 (constDyn textPrimary) i
             p $ text t
             spacer
-            renderIcon' 5 (constDyn textColor) chevronRightO
+            renderIcon' 5 (constDyn textLight) chevronRightO
             return (librarySubviews t, Just t)
 
         librarySubviews :: Reflex t => Text -> UI t ()

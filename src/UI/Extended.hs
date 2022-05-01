@@ -6,6 +6,7 @@ module UI.Extended where
 import Data.Text as T (Text, unwords)
 
 import UI.Class
+import UI.Theme
 
 import qualified Reflex.Dom as D
 
@@ -34,9 +35,9 @@ renderAttrs = T.unwords
 
 ---- Button ------------
 
-button_ :: [Attribute] -> Text -> UI t (Event t ())
+button_ :: Theme UI => [Attribute] -> Text -> UI t (Event t ())
 button_ attrs t = UI $ do
-    (btn, _) <- elClass' "button" (renderAttrs $ "button":attrs) $ D.text t
+    (btn, _) <- elClass' "button" (renderAttrs ("button":attrs) <> " active:" <> borderPrimary) $ D.text t
     return $ domEvent Click btn
 
 ------------------------

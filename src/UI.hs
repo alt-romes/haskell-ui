@@ -188,6 +188,10 @@ tabView initial ls displayName routing = mdo
 imageRS :: Text -> UI t ()
 imageRS url = UI $ elAttr "img" ("src"=:url <> "class"=:"h-10 w-10 rounded-full object-cover") D.blank
 
+-- | Dynamic Image (the image will change when the dynamic url is updated)
+imageD :: Dynamic t Text -> UI t ()
+imageD url = UI $ elDynAttr "img" (("class"=:"object-cover max-w-56 max-h-56 rounded-md" <>) . ("src"=:) <$> url) D.blank
+
 heading :: Theme UI => Text -> UI t ()
 heading t = UI do
     elClass "h3" (textColor <> " px-4 pt-6 pb-2 text-2xl font-semibold w-2/3") $ D.text t
@@ -234,7 +238,7 @@ dynText x = UI (D.dynText x)
 
 ---- Button ------------
 
-button :: Text -> UI t (Event t ())
+button :: Theme UI => Text -> UI t (Event t ())
 button = button_ []
 {-# INLINE button #-}
 

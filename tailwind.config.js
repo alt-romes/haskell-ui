@@ -17,6 +17,7 @@ module.exports = {
         },
         {
             pattern: /grid-cols-(1|2|3|4|5|6|7|8|9|10|11|12)/,
+            variants: ["sm", "md", "lg", "xl"]
         },
         {
             pattern: /gap-(1|1.5|2|2.5|3|3.5|4|5|6|7||8|9|10|11|12|14|16|20|24)/,
@@ -26,7 +27,7 @@ module.exports = {
         },
         {
             pattern: /border-(.+?)-(.+)/,
-            variants: ["focus"]
+            variants: ["focus", "active"]
         },
         {
             pattern: /divide-(.+?)-(.+)/,
