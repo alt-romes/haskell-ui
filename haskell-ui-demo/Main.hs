@@ -34,7 +34,7 @@ main :: IO ()
 main = mainUI (cobLogin "mimes8.cultofbits.com" ui)
 
 instance Theme UI where
-    primaryColor = Red
+    primaryColor = Green
     grayScale = Neutral
 
 ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
@@ -51,7 +51,7 @@ ui session = do
             "Radio" -> 
                 navigationTitle "Radio"
 
-            "Library" -> navigationView "Library" $ scrollView do
+            "Library" -> navigationView "Library" $ scrollView $ contentView do
 
                 navigationTitle  "Library"
 

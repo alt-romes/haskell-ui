@@ -43,6 +43,6 @@
     @apply flex-none /* Disable flex-1 for the header and footer, meaning everything else will take the space in between*/
 }
 
-.list.flex.flex-col > * {
-    @apply pr-4 /* List applies a left padding on the main container, and all its children must apply the left padding */
-}
+/* .list.flex.flex-col > * { */
+/*     @apply pr-4 /1* List applies a left padding on the main container, and all its children must apply the left padding *1/ */
+/* } */

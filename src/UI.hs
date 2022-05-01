@@ -64,7 +64,7 @@ spacer :: UI t ()
 spacer = UI $ divClass "flex-1" D.blank
 
 listClass :: Theme UI => Text
-listClass = borderColor <> " " <> divideColor <> " flex flex-col ml-4 border-b border-t divide-y list w-full" 
+listClass = borderColor <> " " <> divideColor <> " flex flex-col border-b border-t divide-y list w-full" 
 
 -- | Display a dynamic list of values
 -- Return a dynamic list of the values returned by the UI created for each list item
@@ -118,12 +118,12 @@ mergeDynEvts = switchDyn . fmap leftmost
 
 ---- UI ----------------
 
--- DEPRECATED! TODO del
 -- -- | A view for your content.
 -- -- At the moment, for vstack with spacers to work correctly, 'contentView'
 -- -- should be the parent element
--- contentView :: UI t a -> UI t a
+contentView :: UI t a -> UI t a
 -- contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5 h-full flex flex-col" x
+contentView (UI x) = UI $ divClass "py-8 px-5" x
 
 -- | Scroll view!
 --
@@ -194,11 +194,11 @@ imageD url = UI $ elDynAttr "img" (("class"=:"object-cover max-w-56 max-h-56 rou
 
 heading :: Theme UI => Text -> UI t ()
 heading t = UI do
-    elClass "h3" (textColor <> " px-4 pt-6 pb-2 text-2xl font-semibold w-2/3") $ D.text t
+    elClass "h3" (textColor <> " pt-6 pb-2 text-2xl font-semibold w-2/3") $ D.text t
 
 navigationTitle :: Theme UI => Text -> UI t ()
 navigationTitle t = UI do
-    elClass "h1" (textColor <> " px-4 pt-6 pb-2 text-4xl font-bold w-2/3") $ D.text t
+    elClass "h1" (textColor <> " pt-6 pb-2 text-4xl font-bold w-2/3") $ D.text t
 
 -- TODO: Unify navigationBar and navigationTitle
 
@@ -363,7 +363,3 @@ infixl 1 <~~
 
 infixr 1 ~~>
 
-------------------------
-
--- todoListWidget :: MonadWidget t m => Dynamic t [Todo] -> m ()
--- todoListWidget = void . flip simpleList (elClass "p" "block" . dynText . fmap todoText)
