@@ -64,7 +64,7 @@ spacer :: UI t ()
 spacer = UI $ divClass "flex-1" D.blank
 
 listClass :: Theme UI => Text
-listClass = borderColor <> " flex flex-col ml-4 border-b border-t divide-y list w-full" 
+listClass = borderColor <> " " <> divideColor <> " flex flex-col ml-4 border-b border-t divide-y list w-full" 
 
 -- | Display a dynamic list of values
 -- Return a dynamic list of the values returned by the UI created for each list item
@@ -212,9 +212,6 @@ navigationBar backText titleText = UI do
 -- with a title
 -- navigationBar' :: Maybe Text -> UI t ()
 -- navigationBar' titleText = UI do
-
-label :: Text -> UI t ()
-label t = UI $ elClass "label" "label mb-1" $ D.text t
 
 -- | Label with an Icon
 labelI :: Icon -> Text -> UI t ()

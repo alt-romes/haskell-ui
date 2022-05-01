@@ -26,6 +26,14 @@ module.exports = {
         },
         {
             pattern: /border-(.+?)-(.+)/,
+            variants: ["focus"]
+        },
+        {
+            pattern: /divide-(.+?)-(.+)/,
+        },
+        {
+            pattern: /ring-(.+?)-(.+)/,
+            variants: ["focus"]
         },
     ],
 }

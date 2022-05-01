@@ -31,7 +31,8 @@ main :: IO ()
 main = mainUI (cobLogin "mimes8.cultofbits.com" ui)
 
 instance Theme UI where
-    primaryColor = Teal
+    primaryColor = Red
+    grayScale = Neutral
 
 ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
 ui session = do

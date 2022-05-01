@@ -20,7 +20,7 @@ category:           Web
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  UI, UI.Utils, UI.Extended, UI.Icons, UI.Theme, UI.Class
+    exposed-modules:  UI, UI.Utils, UI.Extended, UI.Icons, UI.Theme, UI.Class, UI.Input, UI.Text
 
     -- Modules included in this library but not exported.
     -- other-modules:

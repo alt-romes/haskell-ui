@@ -5,6 +5,10 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-|
+The user should @instance Theme UI@ and override the defaults before using UI,
+many UI functions depend on 'UI' instancing 'Theme'.
+-}
 module UI.Theme where
 
 import Data.Kind
@@ -12,11 +16,20 @@ import Data.Text (Text, pack)
 
 import UI.Class
 
-data Color = Slate
+type Theme :: (* -> * -> *) -> Constraint
+
+class Theme a where
+    primaryColor :: Color
+    primaryColor = Red
+
+    grayScale :: Color
+    grayScale = Neutral
+
+data Color = Slate -- ^ Coldest gray
            | Gray
            | Zinc
            | Neutral
-           | Stone
+           | Stone -- ^ Warmest gray
            | Red
            | Orange
            | Amber
@@ -62,15 +75,6 @@ instance Show Color where
 color :: Color -> Text
 color = pack . show
 
-type Theme :: (* -> * -> *) -> Constraint
-
-class Theme a where
-    primaryColor :: Color
-    primaryColor = Red
-
-    grayScale :: Color
-    grayScale = Neutral
-
 textColor :: Theme UI => Text
 textColor = "text-" <> color (grayScale @UI) <> "-900"
 
@@ -80,8 +84,20 @@ textLight = "text-" <> color (grayScale @UI) <> "-200"
 textMedium :: Theme UI => Text
 textMedium = "text-" <> color (grayScale @UI) <> "-500"
 
+textDarker :: Theme UI => Text
+textDarker = "text-" <> color (grayScale @UI) <> "-700"
+
 textPrimary :: Theme UI => Text
 textPrimary = "text-" <> color (primaryColor @UI) <> "-500"
 
 borderColor :: Theme UI => Text
 borderColor = "border-" <> color (grayScale @UI) <> "-200"
+
+borderPrimary :: Theme UI => Text
+borderPrimary = "border-" <> color (primaryColor @UI) <> "-500"
+
+divideColor :: Theme UI => Text
+divideColor = "divide-" <> color (grayScale @UI) <> "-200"
+
+ringPrimary :: Theme UI => Text
+ringPrimary = "ring-" <> color (primaryColor @UI) <> "-500"

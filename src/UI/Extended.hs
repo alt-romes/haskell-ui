@@ -32,26 +32,6 @@ renderAttrs = T.unwords
         -- renderSide B = "b"
         -- renderSide L = "l"
 
-
----- Input -------------
-
-input_ :: [Attribute]
-       -> UI t (Dynamic t Text)
-input_ = fmap value . flip input_' id
-{-# INLINE input_ #-}
-
-input_' :: [Attribute]
-       -> (InputElementConfig EventResult t GhcjsDomSpace -> InputElementConfig EventResult t GhcjsDomSpace) -- ^ Lens/Function to modify the InputElConfig
-       -> UI t (InputElement EventResult GhcjsDomSpace t)
-input_' attrs confLens = UI $
-    inputElement (def & (initialAttributes .~ ("type" =: "text" <> "class" =: renderAttrs ("input":attrs))) . confLens)
-
-inputP_' :: [Attribute]
-         -> (InputElementConfig EventResult t GhcjsDomSpace -> InputElementConfig EventResult t GhcjsDomSpace) -- ^ Lens/Function to modify the InputElConfig
-         -> UI t (InputElement EventResult GhcjsDomSpace t)
-inputP_' attrs confLens = UI $
-    inputElement (def & (initialAttributes .~ ("type" =: "password" <> "class" =: renderAttrs ("input":attrs))) . confLens)
-
 ---- Button ------------
 
 button_ :: [Attribute] -> Text -> UI t (Event t ())
