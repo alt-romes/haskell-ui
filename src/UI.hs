@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE LambdaCase #-}
@@ -23,6 +24,8 @@ import Reflex.Network (networkHold)
 
 import UI.Extended
 import UI.Icons
+import UI.Theme
+import UI.Class
 
 -- | The mainUI function takes a root and renders the app
 mainUI :: (forall t. Reflex t => UI t ()) -> IO ()
@@ -60,30 +63,33 @@ vstack' size (UI x) = UI $ divClass ("flex flex-col h-auto gap-" <> (pack . show
 spacer :: UI t ()
 spacer = UI $ divClass "flex-1" D.blank
 
+listClass :: Theme UI => Text
+listClass = borderColor <> " flex flex-col ml-4 border-b border-t divide-y list w-full" 
+
 -- | Display a dynamic list of values
 -- Return a dynamic list of the values returned by the UI created for each list item
-list :: Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Dynamic t [b])
+list :: Theme UI => Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Dynamic t [b])
 list l f = UI do
-    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+    divClass listClass do
         D.simpleList l (unUI . f)
 
 -- | Like 'list', but returns an event that fires when any item of the list is
 -- clicked, with the value returned by the 'UI' generating function for that item.
-listE :: Reflex t => Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Event t b)
+listE :: (Theme UI, Reflex t) => Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Event t b)
 listE l f = UI do
-    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+    divClass listClass do
         mergeDynEvts <$> D.simpleList l \i -> do
             (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
             return (x <$ domEvent Click e)
 
-menu :: [a] -> (a -> UI t b) -> UI t [b]
+menu :: Theme UI => [a] -> (a -> UI t b) -> UI t [b]
 menu l f = UI do
-    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+    divClass listClass do
         forM l (unUI . f)
 
-menuE :: [a] -> (a -> UI t b) -> UI t (Event t b)
+menuE :: Theme UI => [a] -> (a -> UI t b) -> UI t (Event t b)
 menuE l f = UI do
-    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+    divClass listClass do
         leftmost <$> forM l \i -> do
             (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
             return (x <$ domEvent Click e)
@@ -145,7 +151,7 @@ data NavigationView = Top | Nested (Maybe Text)
 -- 
 -- Receives the name of the navigation view and a widget that on an event
 -- creates another widget and the text naming that widget, if said to create widget has a name
-navigationView :: Reflex t => Text -> UI t (Event t (UI t a, Maybe Text)) -> UI t ()
+navigationView :: Theme UI => Reflex t => Text -> UI t (Event t (UI t a, Maybe Text)) -> UI t ()
 navigationView title topView = do
     router (error "The top view should be rendered statically", Top) $ \case
         (_, Top) -> fmap (second Nested) <$> topView
@@ -159,21 +165,22 @@ navigationView title topView = do
 --
 -- Takes an initial tab, a list of tab names, and a routing function (tab name -> ui)
 -- The bool indicates whether to display or not the route name under the icon
-tabView :: Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI t ()
+tabView :: Theme UI => Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI t ()
 tabView initial ls displayName routing = mdo
     router initial ((clicks <$) <$> routing)
     clicks <- leftmost <$> UI do
-        elClass "footer" "inset-x-0 border-t border-neutral-200 bg-white/40 backdrop-blur-md pt-0.5 px-2" $ do
+        elClass "footer" footerClass $ do
             elClass "ul" ("grid grid-cols-" <> (pack . show . length) ls) $ do
                 forM ls $ \(name, i) -> mdo
                     (li, _) <- elClass' "li" ("cursor-pointer flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
-                        itemClass <- holdDyn (if initial == name then "text-red-500" else "text-neutral-900/50")
-                                        ((\x -> if x == name then "text-red-500" else "text-neutral-900/50") <$> clicks)
+                        itemClass <- holdDyn (mkTabItemClass name initial) (mkTabItemClass name <$> clicks)
                         unUI $ renderIcon' 6 itemClass i
                         when displayName $
-                           elDynClass "p" (("text-center truncate overflow-hidden text-2xs tracking-tight " <>) <$> itemClass) (D.text name)
+                           elDynClass "p" itemClass (D.text name)
                     return (name <$ domEvent Click li)
     return ()
+        where footerClass = borderColor <> " inset-x-0 border-t bg-white/40 backdrop-blur-md pt-0.5 px-2"
+              mkTabItemClass n x = (if n == x then textPrimary else textColor <> " text-opacity-50") <> " text-center truncate overflow-hidden text-2xs tracking-tight"
 
 ---- Text --------------
 
@@ -181,24 +188,24 @@ tabView initial ls displayName routing = mdo
 imageRS :: Text -> UI t ()
 imageRS url = UI $ elAttr "img" ("src"=:url <> "class"=:"h-10 w-10 rounded-full object-cover") D.blank
 
-heading :: Text -> UI t ()
+heading :: Theme UI => Text -> UI t ()
 heading t = UI do
-    elClass "h3" "px-4 pt-6 pb-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
+    elClass "h3" (textColor <> " px-4 pt-6 pb-2 text-2xl font-semibold w-2/3") $ D.text t
 
-navigationTitle :: Text -> UI t ()
+navigationTitle :: Theme UI => Text -> UI t ()
 navigationTitle t = UI do
-    elClass "h1" "px-4 pt-6 pb-2 text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
+    elClass "h1" (textColor <> " px-4 pt-6 pb-2 text-4xl font-bold w-2/3") $ D.text t
 
 -- TODO: Unify navigationBar and navigationTitle
 
 -- | Create a navigation bar with a back button (with the first argument), a
 -- top title (the second argument) that fires the resulting event when the back button is clicked
-navigationBar :: Maybe Text -> Maybe Text -> UI t (Event t ())
+navigationBar :: Theme UI => Maybe Text -> Maybe Text -> UI t (Event t ())
 navigationBar backText titleText = UI do
-    elClass "header" "inset-x-0 border-b border-neutral-200 bg-white/40 backdrop-blur-md px-2 py-2" $ do
+    elClass "header" (borderColor <> " inset-x-0 border-b bg-white/40 backdrop-blur-md px-2 py-2") $ do
         elClass "div" "grid grid-cols-6" $ do
-            svg <- unUI $ renderIcon'' 6 "cursor-pointer col-span-1 text-red-500" chevronLeftO
-            forM_ titleText (elClass "h1" "font-semibold text-center text-neutral-900 col-span-4 text-ellipsis overflow-hidden". D.text)
+            svg <- unUI $ renderIcon'' 6 ((textPrimary <>) <$> " cursor-pointer col-span-1") chevronLeftO
+            forM_ titleText (elClass "h1" (textColor <> " font-semibold text-center col-span-4 text-ellipsis overflow-hidden") . D.text)
             return (domEvent Click svg)
 
 -- | Create a navigation bar without a back button, so basically just a top bar
@@ -227,40 +234,6 @@ display x = UI (D.dynText (pack . show <$> x))
 dynText :: Dynamic t Text -> UI t ()
 dynText x = UI (D.dynText x)
 
----- Input -------------
-
-data InputType = IText | IPassword
-
--- | Simplest Input box
-input :: UI t (Dynamic t Text)
-input = value <$> input' id
-{-# INLINE input #-}
-
--- | Complex Input that takes a Lens/Function to modify the InputElConfig
--- and returns the full InputElement
-input' :: (InputElementConfig EventResult t GhcjsDomSpace -> InputElementConfig EventResult t GhcjsDomSpace) -- ^ Lens/Function to modify the InputElConfig
-       -> UI t (InputElement EventResult GhcjsDomSpace t)
-input' = input_' []
-{-# INLINE input' #-}
-
--- | Simple Input with a Label
-inputL :: Text -> UI t (Dynamic t Text)
-inputL t = UI $ el "div" $ unUI $ do
-    label t
-    input
-
--- | Simple Input with a label.
--- The input value is cleared when the @Event@ fires.
-inputLC :: Text -> Event t a -> UI t (Dynamic t Text)
-inputLC t evt = UI $ el "div" $ unUI $ do
-    label t
-    value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
-
--- | Simple password input with a Label
-inputPL :: Text -> UI t (Dynamic t Text)
-inputPL t = UI $ el "div" $ unUI $ do
-    label t
-    value <$> inputP_' [] id
 
 ---- Button ------------
 

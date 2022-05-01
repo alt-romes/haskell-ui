@@ -16,7 +16,8 @@ import Cob.RecordM.TH
 import Cob.RecordM.UI
 import Cob.UserM.UI
 
-import UI.Extended
+import UI.Theme
+import UI.Class
 import UI.Icons
 import UI
 
@@ -28,6 +29,9 @@ mkRecord ''Artist "ROMES Artists" ["Picture", "Name"]
 
 main :: IO ()
 main = mainUI (cobLogin "mimes8.cultofbits.com" ui)
+
+instance Theme UI where
+    primaryColor = Teal
 
 ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
 ui session = do
@@ -69,10 +73,10 @@ ui session = do
 
         libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t (), Maybe Text)
         libraryMenuItem (t, i) = paddingYContainer $ hstack do
-            renderIcon' 6 "text-red-500" i
+            renderIcon' 6 (constDyn textPrimary) i
             p $ text t
             spacer
-            renderIcon' 5 "text-" chevronRightO
+            renderIcon' 5 (constDyn textColor) chevronRightO
             return (librarySubviews t, Just t)
 
         librarySubviews :: Reflex t => Text -> UI t ()

@@ -6,9 +6,10 @@ module UI.Icons where
 
 -- Icons from https://heroicons.com
 
-import UI.Extended
 import Data.Text
 import qualified Data.Map as M
+
+import UI.Class
 
 -- | The Text is equivalent to heroicons defined path
 --

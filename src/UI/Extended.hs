@@ -1,43 +1,13 @@
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UI.Extended ( module Reflex.Dom, module UI.Extended ) where
+module UI.Extended where
 
 import Data.Text as T (Text, unwords)
 
-import Control.Monad.IO.Class
-import Control.Monad.Fix
-import Reflex.Dom.Builder.Class
-import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simpleList)
+import UI.Class
+
 import qualified Reflex.Dom as D
-
--- type UI :: x -> * -> * -- TODO:
-newtype UI t a = UI { unUI :: forall m. MonadWidget t m  => m a }
-    deriving (Functor)
-
-instance Applicative (UI t) where
-    pure x = UI $ pure x
-    (UI f) <*> (UI a) = UI (f <*> a)
-
-instance Monad (UI t) where
-    (UI x) >>= f = UI (x >>= unUI . f)
-
-instance MonadFix (UI t) where
-    mfix f = UI $ mfix (unUI . f)
-
-instance MonadIO (UI t) where
-    liftIO x = UI $ liftIO x
-
-instance MonadSample t (UI t) where
-    sample x = UI (sample x)
-
--- instance DomBuilder t (UI t) where -- TODO:
---     type DomBuilderSpace (UI t) = GhcjsDomSpace
 
 data Side = T | R | B | L
 
