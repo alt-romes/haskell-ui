@@ -1,11 +1,11 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE MonoLocalBinds #-}
 module UI.Extended ( module Reflex.Dom, module UI.Extended ) where
 
 import Data.Text as T (Text, unwords)
@@ -17,7 +17,7 @@ import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simp
 import qualified Reflex.Dom as D
 
 -- type UI :: x -> * -> * -- TODO:
-newtype UI t a = UI { unUI :: forall m. (Reflex t, MonadWidget t m) => m a }
+newtype UI t a = UI { unUI :: forall m. MonadWidget t m  => m a }
     deriving (Functor)
 
 instance Applicative (UI t) where
@@ -33,7 +33,11 @@ instance MonadFix (UI t) where
 instance MonadIO (UI t) where
     liftIO x = UI $ liftIO x
 
+instance MonadSample t (UI t) where
+    sample x = UI (sample x)
+
 -- instance DomBuilder t (UI t) where -- TODO:
+--     type DomBuilderSpace (UI t) = GhcjsDomSpace
 
 data Side = T | R | B | L
 
@@ -71,6 +75,12 @@ input_' :: [Attribute]
        -> UI t (InputElement EventResult GhcjsDomSpace t)
 input_' attrs confLens = UI $
     inputElement (def & (initialAttributes .~ ("type" =: "text" <> "class" =: renderAttrs ("input":attrs))) . confLens)
+
+inputP_' :: [Attribute]
+         -> (InputElementConfig EventResult t GhcjsDomSpace -> InputElementConfig EventResult t GhcjsDomSpace) -- ^ Lens/Function to modify the InputElConfig
+         -> UI t (InputElement EventResult GhcjsDomSpace t)
+inputP_' attrs confLens = UI $
+    inputElement (def & (initialAttributes .~ ("type" =: "password" <> "class" =: renderAttrs ("input":attrs))) . confLens)
 
 ---- Button ------------
 

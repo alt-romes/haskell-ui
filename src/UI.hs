@@ -17,8 +17,6 @@ import Data.Time (NominalDiffTime)
 import Data.Bifunctor (second)
 
 import Control.Monad (forM, when, forM_)
-import Control.Monad.IO.Class (liftIO)
-import System.Random (randomIO)
 
 import qualified Reflex.Dom as D
 import Reflex.Network (networkHold)
@@ -40,15 +38,18 @@ mainUI (UI root) = mainWidgetWithHead headWidget $ do
 ---- Layout ------------
 
 paddingContainer :: UI t a -> UI t a
-paddingContainer (UI x) = UI $ divClass "p-2" x
+paddingContainer (UI x) = UI $ divClass "p-3" x
+
+paddingYContainer :: UI t a -> UI t a
+paddingYContainer (UI x) = UI $ divClass "py-3" x
 
 -- | Horizontally stack items
 hstack :: UI t a -> UI t a
-hstack (UI x) = UI $ divClass "flex flex-row flex-nowrap justify-evenly gap-8" x
+hstack (UI x) = UI $ divClass "flex flex-row flex-nowrap gap-4 items-center w-full justify-center" x
 
 -- | Vertically stack items
 vstack :: UI t a -> UI t a
-vstack (UI x) = UI $ divClass "flex flex-col gap-4 h-auto" x
+vstack (UI x) = UI $ divClass "flex flex-col gap-4 items-center w-full justify-center" x
 
 -- | Vertically stack items with the given gap in between elements.
 -- Available gap sizes are 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8... 24
@@ -59,10 +60,51 @@ vstack' size (UI x) = UI $ divClass ("flex flex-col h-auto gap-" <> (pack . show
 spacer :: UI t ()
 spacer = UI $ divClass "flex-1" D.blank
 
+-- | Display a dynamic list of values
+-- Return a dynamic list of the values returned by the UI created for each list item
 list :: Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Dynamic t [b])
 list l f = UI do
-    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list" do
+    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
         D.simpleList l (unUI . f)
+
+-- | Like 'list', but returns an event that fires when any item of the list is
+-- clicked, with the value returned by the 'UI' generating function for that item.
+listE :: Reflex t => Dynamic t [a] -> (Dynamic t a -> UI t b) -> UI t (Event t b)
+listE l f = UI do
+    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+        mergeDynEvts <$> D.simpleList l \i -> do
+            (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
+            return (x <$ domEvent Click e)
+
+menu :: [a] -> (a -> UI t b) -> UI t [b]
+menu l f = UI do
+    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+        forM l (unUI . f)
+
+menuE :: [a] -> (a -> UI t b) -> UI t (Event t b)
+menuE l f = UI do
+    divClass "flex flex-col ml-4 border-neutral-200 border-b border-t divide-y list w-full" do
+        leftmost <$> forM l \i -> do
+            (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
+            return (x <$ domEvent Click e)
+
+-- | Turn a dynamic list of (XOR) events (meaning only one of the events can
+-- occur at a time) into an event that occurs every time one of the events
+-- occurs.
+--
+-- This is particularly useful for turning the output of 'list' into a single
+-- event representing a click on one of the items.
+--
+-- Example:
+--
+-- Because of 'mergeDynEvts', @clickListItem@ is an event that fires whenever one of the list items is clicked
+-- @
+-- clickListItem <- mergeDynEvts <$> list ["a","b","c"] (\t -> do
+--                       click <- button "Join"
+--                       return (t <$ click) 
+-- @
+mergeDynEvts :: Reflex t => Dynamic t [Event t a] -> Event t a
+mergeDynEvts = switchDyn . fmap leftmost
 
 -- | Vertically stack items inside the semantic <form></form> tags
 -- form :: UI t a -> UI t a
@@ -135,23 +177,17 @@ tabView initial ls displayName routing = mdo
 
 ---- Text --------------
 
+-- | Rounded small image given an URL
+imageRS :: Text -> UI t ()
+imageRS url = UI $ elAttr "img" ("src"=:url <> "class"=:"h-10 w-10 rounded-full object-cover") D.blank
+
+heading :: Text -> UI t ()
+heading t = UI do
+    elClass "h3" "px-4 pt-6 pb-2 text-2xl font-semibold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
+
 navigationTitle :: Text -> UI t ()
 navigationTitle t = UI do
-    -- rid <- ("navtitlebar" <>) . pack . show @Int . abs <$> liftIO randomIO
-    -- elAttr "header" ("id"=:rid) do
-        -- el "div" do -- Styles were added to `div` and `h1` based on whether
-                    -- the head is navigationTitleAsTitle or AsHeader (See
-                    -- src/input.css)
-            elClass "h1" "px-4 pt-6 pb-2 text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
-            -- el "script" do
-            --     D.text $
-            --         "let observer = new IntersectionObserver(entries => { entries.forEach(entry => {\
-            --         \    entry.target.classList.toggle('navigationTitleAsTitle', entry.isIntersecting);\
-            --         \    entry.target.classList.toggle('navigationTitleAsHeader', !entry.isIntersecting);\
-            --         \}) }, {threshold: 1.0});\
-            --         \observer.observe(document.querySelector('#" <> rid <> "'));\
-            --         \ "
-
+    elClass "h1" "px-4 pt-6 pb-2 text-4xl font-bold text-neutral-900 dark:text-neutral-100 w-2/3" $ D.text t
 
 -- TODO: Unify navigationBar and navigationTitle
 
@@ -169,7 +205,6 @@ navigationBar backText titleText = UI do
 -- with a title
 -- navigationBar' :: Maybe Text -> UI t ()
 -- navigationBar' titleText = UI do
-
 
 label :: Text -> UI t ()
 label t = UI $ elClass "label" "label mb-1" $ D.text t
@@ -221,10 +256,11 @@ inputLC t evt = UI $ el "div" $ unUI $ do
     label t
     value <$> input' (inputElementConfig_setValue .~ ("" <$ evt))
 
--- inputLT :: Text -> InputType -> UI t (Dynamic t Text)
--- inputLT labelText inputType = UI $ divClass "" $ unUI $ do
---     label labelText
---     value <$> input' ()
+-- | Simple password input with a Label
+inputPL :: Text -> UI t (Dynamic t Text)
+inputPL t = UI $ el "div" $ unUI $ do
+    label t
+    value <$> inputP_' [] id
 
 ---- Button ------------
 
@@ -314,6 +350,9 @@ path (UI g) f = UI $ mdo
 
 ---- Other -------------
 
+p :: UI t a -> UI t a
+p x = UI (el "p" $ unUI x)
+
 text :: Text -> UI t ()
 text x = UI (D.text x)
 
@@ -335,6 +374,9 @@ verySoon = UI (unUI (timer 0.00000001) >>= headE)
 -- | Fires an event after X seconds
 after :: NominalDiffTime -> UI t (Event t ())
 after t = UI (unUI (timer t) >>= headE)
+
+clickEvt :: Reflex t => Element EventResult GhcjsDomSpace t -> Event t ()
+clickEvt = domEvent Click
 
 (<~~) :: Reflex t => Event t b -> Dynamic t a -> Event t a
 (<~~) = flip tagPromptlyDyn

@@ -631,6 +631,10 @@ body {
   height: 100%;
 }
 
+.h-10 {
+  height: 2.5rem;
+}
+
 .h-1 {
   height: 0.25rem;
 }
@@ -665,10 +669,6 @@ body {
 
 .h-9 {
   height: 2.25rem;
-}
-
-.h-10 {
-  height: 2.5rem;
 }
 
 .h-11 {
@@ -947,6 +947,14 @@ body {
   max-height: 0.875rem;
 }
 
+.w-full {
+  width: 100%;
+}
+
+.w-10 {
+  width: 2.5rem;
+}
+
 .w-2\/3 {
   width: 66.666667%;
 }
@@ -985,10 +993,6 @@ body {
 
 .w-9 {
   width: 2.25rem;
-}
-
-.w-10 {
-  width: 2.5rem;
 }
 
 .w-11 {
@@ -1279,16 +1283,16 @@ body {
   align-items: center;
 }
 
-.justify-evenly {
-  justify-content: space-evenly;
-}
-
-.gap-8 {
-  gap: 2rem;
+.justify-center {
+  justify-content: center;
 }
 
 .gap-4 {
   gap: 1rem;
+}
+
+.gap-8 {
+  gap: 2rem;
 }
 
 .gap-2 {
@@ -1814,6 +1818,10 @@ body {
 
 .text-ellipsis {
   text-overflow: ellipsis;
+}
+
+.rounded-full {
+  border-radius: 9999px;
 }
 
 .border-b {
@@ -2463,8 +2471,18 @@ body {
   stroke: #713f12;
 }
 
-.p-2 {
-  padding: 0.5rem;
+.object-cover {
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+
+.p-3 {
+  padding: 0.75rem;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
 }
 
 .py-8 {
@@ -2525,17 +2543,22 @@ body {
   line-height: 1rem;
 }
 
+.text-2xl {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
 .text-4xl {
   font-size: 2.25rem;
   line-height: 2.5rem;
 }
 
-.font-bold {
-  font-weight: 700;
-}
-
 .font-semibold {
   font-weight: 600;
+}
+
+.font-bold {
+  font-weight: 700;
 }
 
 .tracking-tight {
@@ -3106,40 +3129,6 @@ body {
 
 .list.flex.flex-col > * {
   padding-right: 1rem;
-}
-
-.navigationTitleAsTitle {
-}
-
-.navigationTitleAsBar {
-  left: 0px;
-  right: 0px;
-  border-bottom-width: 1px;
-  --tw-border-opacity: 1;
-  border-color: rgb(229 229 229 / var(--tw-border-opacity));
-  background-color: rgb(255 255 255 / 0.4);
-  padding-left: 0.5rem;
-  padding-right: 0.5rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  --tw-backdrop-blur: blur(12px);
-  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
-          backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
-}
-
-.navigationTitleAsBar > div {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-}
-
-.navigationTitleAsBar > div > h1 {
-  grid-column: span 4 / span 4;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-  font-weight: 600;
-  --tw-text-opacity: 1;
-  color: rgb(23 23 23 / var(--tw-text-opacity));
 }
 
 @media (prefers-color-scheme: dark) {

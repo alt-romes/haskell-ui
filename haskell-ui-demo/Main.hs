@@ -23,140 +23,69 @@ import UI
 newtype Todo = Todo Text
 mkRecord ''Todo "ROMES Todos" ["Todo"]
 
-
-data Movie = Movie Text Text Text Text
-mkRecord ''Movie "ROMES Watched Movies" ["Movie", "Year", "Director", "Rating"]
-
-mainContent :: Reflex t => CobSession -> UI t ()
-mainContent session = do
-    -- contentView $ do
-
-        hstack $ do
-
-            -- Watched Movies
-            vstack $ mdo
-
-                v1 <- inputLC "Movie" click
-                v2 <- inputLC "Director" click
-                v3 <- inputLC "Year" click
-                v4 <- inputLC "Rating" click
-
-                click <- button "Add Movie"
-
-                dynIf ((==) <$> v1 <*> v2)
-                    (display (v1 <> "---" <> v2))
-                    blank
-
-                rmAddInstances (click <~~ Movie <$> v1 <*> v2 <*> v3 <*> v4) session
-
-            -- Todos
-            vstack $ mdo
-
-                val <- inputLC "Todo" click
-                click <- button "Add Todo"
-                rmAddInstances (click <~~ Todo <$> val) session
-
-        return ()
-
-searchPage = vstack $ do
-    input
-    input
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-    button "Search"
-
-cardView :: Reflex t => Dynamic t Int -> Dynamic t Text -> UI t ()
-cardView x y = paddingContainer $ vstack' 1 $ do
-    hstack $ do
-        text "Design"
-        spacer
-    spacer
-    hstack $ do
-        labelI' userGroupO (T.pack . show <$> x)
-        spacer
-        labelI' clockO y
-
+data Artist = Artist { url :: Text, name :: Text } deriving Show
+mkRecord ''Artist "ROMES Artists" ["Picture", "Name"]
 
 main :: IO ()
-main = mainUI $ do
+main = mainUI (cobLogin "mimes8.cultofbits.com" ui)
 
+ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
+ui session = do
     tabView "Browse" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
 
-        $ \case
+        \case
 
             "Listen Now" ->
-                navigationView "Listen Now" $ scrollView $ do
-                    navigationTitle "Listen Now"
-                    hstack $ do
-                        button "hii"
-                        spacer
-                        button "ho"
-                    ev <- vstack $ do
-                        val <- inputL "Name the song you want to hear"
-                        spacer
-                        click <- button "Search"
-                        return (click <~~ (scrollView $ searchPage,) . Just <$> val)
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    vstack $ do
-                        val <- inputL "Name the song you want to hear"
-                        spacer
-                        click <- button "Search"
-                        return (click <~~ (scrollView $ searchPage,) . Just <$> val)
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    navigationTitle "Listen Now"
-                    return ev
+                navigationTitle "Listen Now"
 
-            "Browse" -> scrollView do
-                navigationTitle  "Browse"
-                let l = constDyn $ [(14, "Ok"),(15, "Ok"),(16, "Not Ok")]
-                list l $ \i -> do
-                    cardView (fst <$> i) (snd <$> i)
-                vstack do
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                    button "rch"
-                return ()
+            "Browse" -> navigationTitle "Browse"
 
             "Radio" -> 
-                navigationTitle  "Radio"
+                navigationTitle "Radio"
 
-            "Library" -> 
+            "Library" -> navigationView "Library" $ scrollView do
+
                 navigationTitle  "Library"
+
+                evs <- menuE [("Playlists", menuAlt2O),
+                              ("Artists", microphoneO),
+                              ("Albums", collectionO),
+                              ("Made For You", inboxO),
+                              ("Songs", noteO),
+                              ("Downloaded", arrowCircleDownO)]
+                             libraryMenuItem
+                             
+                heading "Recently Added"
+                -- gridY 2 ()
+                return evs
+
 
             "Search" -> 
                 navigationTitle  "Search"
 
             _ -> error "unknown route"
+    return never
+    where
+
+        libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t (), Maybe Text)
+        libraryMenuItem (t, i) = paddingYContainer $ hstack do
+            renderIcon' 6 "text-red-500" i
+            p $ text t
+            spacer
+            renderIcon' 5 "text-" chevronRightO
+            return (librarySubviews t, Just t)
+
+        librarySubviews :: Reflex t => Text -> UI t ()
+        librarySubviews = \case
+            "Artists" -> navigationView "Artists" $ scrollView do
+                navigationTitle "Artists"
+                artists <- rmDefinitionInstances ("*" :: String) session
+                listE artists \a -> paddingYContainer $ hstack do
+                    (sample . current) a >>= imageRS . url
+                    p $ dynText (name <$> a)
+                    (sample . current) a >>= return . (display a,) . Just . name
+                    spacer
+                return never
+
+            _ -> error "undefined"
+
