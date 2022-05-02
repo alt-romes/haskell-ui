@@ -16,7 +16,7 @@ import Data.FileEmbed
 import Data.Text (Text, pack)
 import Data.Time (NominalDiffTime)
 
-import Control.Monad (forM)
+import Control.Monad (forM, (>=>))
 
 import qualified Reflex.Dom as D
 
@@ -39,27 +39,27 @@ mainUI (UI root) = mainWidgetWithHead headWidget $ do
 ---- Layout ------------
 
 paddingContainer :: UI a -> UI a
-paddingContainer (UI x) = UI $ divClass "p-3" x
+paddingContainer = divClass "p-3"
 
 paddingYContainer :: UI a -> UI a
-paddingYContainer (UI x) = UI $ divClass "py-3" x
+paddingYContainer = divClass "py-3"
 
 -- | Horizontally stack items
 hstack :: UI a -> UI a
-hstack (UI x) = UI $ divClass "flex flex-row flex-nowrap gap-4 items-center w-full justify-center" x
+hstack = divClass "flex flex-row flex-nowrap gap-4 items-center w-full justify-center"
 
 -- | Vertically stack items
 vstack :: UI a -> UI a
-vstack (UI x) = UI $ divClass "flex flex-col gap-4 items-center w-full justify-center" x
+vstack = divClass "flex flex-col gap-4 items-center w-full justify-center"
 
 -- | Vertically stack items with the given gap in between elements.
 -- Available gap sizes are 1, 1.5, 2, 2.5, 3, 3.5, 4, 5, 6, 7, 8... 24
 -- The intermediate initial values aren't currently available...
 vstack' :: Int -> UI a -> UI a
-vstack' size (UI x) = UI $ divClass ("flex flex-col h-auto gap-" <> (pack . show) size) x
+vstack' size = divClass ("flex flex-col h-auto gap-" <> (pack . show) size)
 
 spacer :: UI ()
-spacer = UI $ divClass "flex-1" D.blank
+spacer = divClass "flex-1" blank
 
 listClass :: Theme UI => Text
 listClass = borderColor <> " " <> divideColor <> " flex flex-col border-b border-t divide-y list w-full" 
@@ -67,29 +67,25 @@ listClass = borderColor <> " " <> divideColor <> " flex flex-col border-b border
 -- | Display a dynamic list of values
 -- Return a dynamic list of the values returned by the UI created for each list item
 list :: Theme UI => Dynamic [a] -> (Dynamic a -> UI b) -> UI (Dynamic [b])
-list l f = UI do
-    divClass listClass do
-        D.simpleList l (unUI . f)
+list l = divClass listClass . D.simpleList l
 
 -- | Like 'list', but returns an event that fires when any item of the list is
 -- clicked, with the value returned by the 'UI' generating function for that item.
 listE :: Theme UI => Dynamic [a] -> (Dynamic a -> UI b) -> UI (Event b)
-listE l f = UI do
+listE l f =
     divClass listClass do
         mergeDynEvts <$> D.simpleList l \i -> do
-            (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
+            (e, x) <- elClass' "div" "cursor-pointer" (f i)
             return (x <$ domEvent Click e)
 
 menu :: Theme UI => [a] -> (a -> UI b) -> UI [b]
-menu l f = UI do
-    divClass listClass do
-        forM l (unUI . f)
+menu l = divClass listClass . forM l
 
 menuE :: Theme UI => [a] -> (a -> UI b) -> UI (Event b)
-menuE l f = UI do
+menuE l f =
     divClass listClass do
         leftmost <$> forM l \i -> do
-            (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
+            (e, x) <- elClass' "div" "cursor-pointer" (f i)
             return (x <$ domEvent Click e)
 
 -- | Turn a dynamic list of (XOR) events (meaning only one of the events can
@@ -121,26 +117,24 @@ mergeDynEvts = switchDyn . fmap leftmost
 -- -- should be the parent element
 contentView :: UI a -> UI a
 -- contentView (UI x) = UI $ divClass "container mx-auto py-8 px-5 h-full flex flex-col" x
-contentView (UI x) = UI $ divClass "py-8 px-5" x
+contentView = divClass "py-8 px-5"
 
 
 ---- Text --------------
 
 -- | Rounded small image given an URL
 imageRS :: Text -> UI ()
-imageRS url = UI $ elAttr "img" ("src"=:url <> "class"=:"h-10 w-10 rounded-full object-cover") D.blank
+imageRS url = elAttr "img" ("src"=:url <> "class"=:"h-10 w-10 rounded-full object-cover") blank
 
 -- | Dynamic Image (the image will change when the dynamic url is updated)
 imageD :: Dynamic Text -> UI ()
-imageD url = UI $ elDynAttr "img" (("class"=:"object-cover max-w-56 max-h-56 rounded-md" <>) . ("src"=:) <$> url) D.blank
+imageD url = elDynAttr "img" (("class"=:"object-cover max-w-56 max-h-56 rounded-md" <>) . ("src"=:) <$> url) blank
 
 heading :: Theme UI => Text -> UI ()
-heading t = UI do
-    elClass "h3" (textColor <> " pt-6 pb-2 text-2xl font-semibold w-2/3") $ D.text t
+heading = elClass "h3" (textColor <> " pt-6 pb-2 text-2xl font-semibold w-2/3") . text
 
 navigationTitle :: Theme UI => Text -> UI ()
-navigationTitle t = UI do
-    elClass "h1" (textColor <> " pt-6 pb-2 text-4xl font-bold w-2/3") $ D.text t
+navigationTitle = elClass "h1" (textColor <> " pt-6 pb-2 text-4xl font-bold w-2/3") . text
 
 -- TODO: Unify navigationBar and navigationTitle
 
@@ -151,22 +145,21 @@ navigationTitle t = UI do
 
 -- | Label with an Icon
 labelI :: Icon -> Text -> UI ()
-labelI i t = UI $ elClass "label" "label mb-1 flex items-center gap-2" $ do
-    el "span" $ unUI $ renderIcon' 5 "" i
-    D.text t
+labelI i t = elClass "label" "label mb-1 flex items-center gap-2" $ do
+    el "span" $ renderIcon' 5 "" i
+    text t
 
 -- | Label with dynamic text and an Icon
 labelI' :: Icon -> Dynamic Text -> UI ()
-labelI' i t = UI $ elClass "label" "label mb-1 flex flex-nowrap items-center gap-2" $ do
-    el "span" $ unUI $ renderIcon' 5 "" i
-    D.dynText t
+labelI' i t = elClass "label" "label mb-1 flex flex-nowrap items-center gap-2" $ do
+    el "span" $ renderIcon' 5 "" i
+    dynText t
 
 display :: Show a => Dynamic a -> UI ()
-display x = UI (D.dynText (pack . show <$> x))
+display = dynText . fmap (pack . show)
 
 dynText :: Dynamic Text -> UI ()
-dynText x = UI (D.dynText x)
-
+dynText = D.dynText
 
 ---- Button ------------
 
@@ -177,15 +170,15 @@ button = button_ []
 ---- Dyn ---------------
 
 dynIf :: Dynamic Bool -> UI a -> UI a -> UI (Event a)
-dynIf b (UI x) (UI y) = UI (dyn ((\case True -> x; False -> y) <$> b))
+dynIf b x y = dyn ((\case True -> x; False -> y) <$> b)
 
 ---- Other -------------
 
 p :: UI a -> UI a
-p x = UI (el "p" $ unUI x)
+p = el "p"
 
 text :: Text -> UI ()
-text x = UI (D.text x)
+text = D.text
 
 blank :: UI ()
 blank = return ()
@@ -196,15 +189,15 @@ timer x = UI ((() <$) <$> tickLossyFromPostBuildTime x)
 
 -- | Fire an event /now/
 now :: UI (Event ())
-now = UI D.now
+now = D.now
 
 -- | Fires an event very soon
 verySoon :: UI (Event ())
-verySoon = UI (unUI (timer 0.00000001) >>= headE)
+verySoon = timer 0.00000001 >>= headE
 
 -- | Fires an event after X seconds
 after :: NominalDiffTime -> UI (Event ())
-after t = UI (unUI (timer t) >>= headE)
+after = timer >=> headE
 
 clickEvt :: Element -> Event ()
 clickEvt = domEvent Click

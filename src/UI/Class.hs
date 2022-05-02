@@ -72,3 +72,12 @@ instance MonadHold Spider UI where
     headE e = UI (headE e)
     now = UI now
 
+-- TODO:
+-- instance PerformEvent Spider UI where
+--     -- type Performable UI = IO
+--     performEvent e = UI (performEvent e)
+-- and fix timer in UI.hs
+--
+-- timer :: NominalDiffTime -> UI (Event ())
+-- timer x = UI ((() <$) <$> tickLossyFromPostBuildTime x)
+-- TODO Fix MonadSample and 'path' in Router too

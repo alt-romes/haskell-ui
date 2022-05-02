@@ -33,7 +33,7 @@ import qualified Reflex.Dom as D
 -- with scroll view, scrolling is enabled so you can scroll down to the end of
 -- the content
 scrollView :: UI a -> UI a
-scrollView (UI x) = UI $ divClass "scroll-smooth overflow-y-scroll scroll-view" x
+scrollView = divClass "scroll-smooth overflow-y-scroll scroll-view"
 
 data NavigationView = Top | Nested
 
@@ -69,13 +69,13 @@ navigationView title topView = do
 tabView :: Theme UI => Text -> [(Text, Icon)] -> Bool -> (Text -> UI a) -> UI ()
 tabView initial ls displayName routing = mdo
     router initial ((clicks <$) <$> routing)
-    clicks <- leftmost <$> UI do
+    clicks <- leftmost <$> do
         elClass "footer" footerClass $ do
             elClass "ul" ("grid grid-cols-" <> (pack . show . length) ls) $ do
                 forM ls $ \(name, i) -> mdo
                     (li, _) <- elClass' "li" ("cursor-pointer flex flex-col items-center" <> if displayName then "" else " pt-1.5 pb-2") $ do
                         itemClass <- holdDyn (mkTabItemClass name initial) (mkTabItemClass name <$> clicks)
-                        unUI $ renderIcon' 6 itemClass i
+                        renderIcon' 6 itemClass i
                         when displayName $
                            elDynClass "p" itemClass (D.text name)
                     return (name <$ domEvent Click li)
@@ -87,10 +87,10 @@ tabView initial ls displayName routing = mdo
 -- | Create a navigation bar with a back button (with the first argument), a
 -- top title (the second argument) that fires the resulting event when the back button is clicked
 navigationBar :: Theme UI => Maybe Text -> Maybe Text -> UI (Event ())
-navigationBar backText titleText = UI do
+navigationBar backText titleText =
     elClass "header" (borderColor <> " inset-x-0 border-b bg-white/40 backdrop-blur-md px-2 py-2") $ do
         elClass "div" "grid grid-cols-6" $ do
-            svg <- unUI $ renderIcon'' 6 ((textPrimary <>) <$> " cursor-pointer col-span-1") chevronLeftO
+            svg <- renderIcon'' 6 ((textPrimary <>) <$> " cursor-pointer col-span-1") chevronLeftO
             forM_ titleText (elClass "h1" (textColor <> " font-semibold text-center col-span-4 text-ellipsis overflow-hidden") . D.text)
             return (domEvent Click svg)
 

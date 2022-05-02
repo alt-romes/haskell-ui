@@ -15,19 +15,19 @@ import qualified Reflex.Dom as D
 flexboxE :: Dynamic [a]
         -> (Dynamic a -> UI b)
         -> UI (Event b)
-flexboxE l f = UI do
+flexboxE l f = do
     divClass "flex flex-row flex-wrap gap-8" do
         mergeDynEvts <$> D.simpleList l \i -> do
-            (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
+            (e, x) <- elClass' "div" "cursor-pointer" (f i)
             return (x <$ domEvent Click e)
 
 gridYE :: Int
        -> Dynamic [a]
        -> (Dynamic a -> UI b)
        -> UI (Event b)
-gridYE size items f = UI do
+gridYE size items f = do
     -- elDynClass "div" ((\l -> "gap-8 grid grid-cols-" <> (pack . show) size <> " grid-rows-" <> (pack . show) (length l `div` size + 1)) <$> items) do
     divClass ("gap-8 grid grid-cols-" <> (pack . show) size <> " sm:grid-cols-" <> (pack . show) (size+1) <> " md:grid-cols-" <> (pack . show) (size + 2) <> " lg:grid-cols-" <> (pack . show) (size + 3)) do
         mergeDynEvts <$> D.simpleList items \i -> do
-            (e, x) <- elClass' "div" "cursor-pointer" (unUI (f i))
+            (e, x) <- elClass' "div" "cursor-pointer" (f i)
             return (x <$ domEvent Click e)

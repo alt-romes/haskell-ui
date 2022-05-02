@@ -14,6 +14,6 @@ import UI.Theme
 
 -- | Add a label above the given UI
 label :: Theme UI => Text -> UI a -> UI a
-label t e = UI $ el "div" $ do
+label t e = el "div" $ do
     elClass "label" (textDarker <> " block text-sm font-medium mb-1") $ D.text t
-    unUI e
+    e

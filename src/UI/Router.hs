@@ -60,8 +60,8 @@ import UI.Class
 --             return (("/login", session) <$ x)
 -- @
 router :: a -> (a -> UI (Event a)) -> UI ()
-router initialRoute routerF = UI $ mdo
-    wow <- fmap (fmap routerF) <$> networkHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
+router initialRoute routerF = mdo
+    wow <- fmap (fmap routerF) <$> networkHold (routerF initialRoute) (switchDyn wow)
     return ()
 
 
