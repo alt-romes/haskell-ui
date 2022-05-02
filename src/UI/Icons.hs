@@ -98,7 +98,7 @@ renderIcon' size c = (() <$) . renderIcon'' size c
 
 -- | Like renderIcon' but return the @svg@ element
 renderIcon'' :: Reflex t => Int -> Dynamic t Text -> Icon -> UI t (Element EventResult GhcjsDomSpace t)
-renderIcon'' size c (OutlinedI p) = UI $
+renderIcon'' size c (OutlinedI p) =
     fst <$> elDynAttrNS' (Just "http://www.w3.org/2000/svg") "svg" dAttrs do
         elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "stroke-linejoin"=:"round" <> "stroke-linecap"=:"round") (return ())
     where
@@ -109,8 +109,7 @@ renderIcon'' size c (OutlinedI p) = UI $
 
       dAttrs = (\dc -> sAttrs <> ( "class" =: (sizeClasses <> dc) )) <$> c
 
-
-renderIcon'' size c (FilledI p) = UI $
+renderIcon'' size c (FilledI p) =
     fst <$> elDynAttrNS' (Just "http://www.w3.org/2000/svg") "svg" dAttrs do
         elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "fill-rule"=:"evenodd" <> "clip-rule"=:"evenodd") (return ())
     where

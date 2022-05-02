@@ -1,15 +1,12 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE BlockArguments #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 module UI.Router where
 
 import Reflex.Network (networkHold)
 
 import UI.Class
-
-import qualified Reflex.Dom as D
 
 -- | Router! Receives an initial value and a function that transforms
 -- values of the same type into UI holding value (route-changing) generating events

@@ -48,11 +48,5 @@ input' inputType confLens placeholder = UI do
                          <> "class" =: inputClass
                          <> "placeholder" =: placeholder)) . confLens)
 
--- -- | Simple Input with a Label
--- inputL :: Text -> UI t (Dynamic t Text)
--- inputL t = UI $ el "div" $ unUI $ do
---     label t
---     input
-
 inputClass :: Theme UI => Text
 inputClass = borderColor <> (" focus:" <> borderPrimary) <> (" focus:" <> ringPrimary) <> " border px-3 py-2 rounded-lg shadow-sm focus:outline-none focus:ring-1"

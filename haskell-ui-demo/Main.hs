@@ -38,9 +38,9 @@ instance Theme UI where
 
 main :: IO ()
 main = do
-    session <- emptySession "mimes8.cultofbits.com"
-    mainUI (ui session >> return ())
-    -- mainUI (cobLogin "mimes8.cultofbits.com" ui)
+    -- session <- emptySession "mimes8.cultofbits.com"
+    -- mainUI (ui session >> return ())
+    mainUI (cobLogin "mimes8.cultofbits.com" ui)
 
 ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
 ui session = do
@@ -81,18 +81,18 @@ ui session = do
     return never
 
     where
-        recentlyAddedItem :: Reflex t => Dynamic t Album -> UI t (UI t (), Maybe Text)
+        recentlyAddedItem :: Reflex t => Dynamic t Album -> UI t (UI t ())
         recentlyAddedItem dalbum =
             vstack do
                 imageD (cover <$> dalbum)
                 dynText (album <$> dalbum)
                 dynText (artist <$> dalbum)
-                return (albumView dalbum, Nothing)
+                return (albumView dalbum)
 
         albumView :: Reflex t => Dynamic t Album -> UI t ()
         albumView dalbum = label "Album" $ dynText (pack . show <$> dalbum)
 
-        libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t (), Maybe Text)
+        libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t ())
         libraryMenuItem (t, i) = paddingYContainer $
             hstack do
 
@@ -103,7 +103,7 @@ ui session = do
 
                 renderIcon' 5 (constDyn textLight) chevronRightO
 
-                return (librarySubviews t, Just t)
+                return (librarySubviews t)
 
         librarySubviews :: Reflex t => Text -> UI t ()
         librarySubviews = \case

@@ -1,4 +1,5 @@
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE LambdaCase #-}
@@ -13,7 +14,6 @@ module UI.View
     ) where
 
 import Data.Text (Text, pack)
-import Data.Bifunctor (second)
 
 import Control.Monad (forM, forM_, when)
 
@@ -35,7 +35,7 @@ import qualified Reflex.Dom as D
 scrollView :: UI t a -> UI t a
 scrollView (UI x) = UI $ divClass "scroll-smooth overflow-y-scroll scroll-view" x
 
-data NavigationView = Top | Nested (Maybe Text)
+data NavigationView = Top | Nested
 
 -- | A 'NavigationTitle' is used to specify how the navigation title should be
 -- displayed in a 'navigationView'
@@ -49,14 +49,16 @@ data NavigationView = Top | Nested (Maybe Text)
 -- Inspired by SwiftUI
 -- 
 -- Receives the name of the navigation view and a widget that on an event
--- creates another widget and the text naming that widget, if said to create widget has a name
-navigationView :: Theme UI => Reflex t => Text -> UI t (Event t (UI t a, Maybe Text)) -> UI t ()
+-- creates another widget
+--
+-- If the created widget wants to have a title it should set so itself
+navigationView :: Theme UI => Reflex t => Text -> UI t (Event t (UI t a)) -> UI t ()
 navigationView title topView = do
     router (error "The top view should be rendered statically", Top) $ \case
-        (_, Top) -> fmap (second Nested) <$> topView
-        (view, Nested t) -> do
-            back <- navigationBar (Just title) t
-            -- todo: backtrack rather than always go to top
+        (_, Top) -> fmap (,Nested) <$> topView
+        (view, Nested) -> do
+            back <- navigationBar (Just title) Nothing -- TODO: Make this bar receive the text elsewhere...
+            -- todo: backtrack rather than always go to top?
             ((error "The top view should be rendered statically", Top) <$ back) <$ view
     return ()
 
