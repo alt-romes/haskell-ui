@@ -59,7 +59,7 @@ import UI.Class
 --             x <- button "Unknown"
 --             return (("/login", session) <$ x)
 -- @
-router :: a -> (a -> UI t (Event t a)) -> UI t ()
+router :: a -> (a -> UI (Event a)) -> UI ()
 router initialRoute routerF = UI $ mdo
     wow <- fmap (fmap routerF) <$> networkHold (unUI $ routerF initialRoute) (unUI <$> switchDyn wow)
     return ()
@@ -76,12 +76,12 @@ router initialRoute routerF = UI $ mdo
 --         dbTable "XYZ" tok    -- dbTable :: String -> Token -> UI t ()
 --         return never         -- never return to the previous page
 -- @
-path :: UI t (Event t a) -> (a -> UI t b) -> UI t ()
+path :: UI (Event a) -> (a -> UI b) -> UI ()
 path (UI g) f = UI $ mdo
     pathEv <- networkHold g ((never <$) . unUI . f <$> switchDyn pathEv)
     return ()
 
 -- | The same as @path@, but more visually appealing
-(~~>) :: UI t (Event t a) -> (a -> UI t (Event t a)) -> UI t ()
+(~~>) :: UI (Event a) -> (a -> UI (Event a)) -> UI ()
 (~~>) = path
 infixr 1 ~~>

@@ -42,7 +42,7 @@ main = do
     -- mainUI (ui session >> return ())
     mainUI (cobLogin "mimes8.cultofbits.com" ui)
 
-ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
+ui :: CobSession -> UI (Event CobRoute)
 ui session = do
 
     tabView "Browse" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
@@ -81,7 +81,7 @@ ui session = do
     return never
 
     where
-        recentlyAddedItem :: Reflex t => Dynamic t Album -> UI t (UI t ())
+        recentlyAddedItem :: Dynamic Album -> UI (UI ())
         recentlyAddedItem dalbum =
             vstack do
                 imageD (cover <$> dalbum)
@@ -89,10 +89,10 @@ ui session = do
                 dynText (artist <$> dalbum)
                 return (albumView dalbum)
 
-        albumView :: Reflex t => Dynamic t Album -> UI t ()
+        albumView :: Dynamic Album -> UI ()
         albumView dalbum = label "Album" $ dynText (pack . show <$> dalbum)
 
-        libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t ())
+        libraryMenuItem :: (Text, Icon) -> UI (UI ())
         libraryMenuItem (t, i) = paddingYContainer $
             hstack do
 
@@ -105,7 +105,7 @@ ui session = do
 
                 return (librarySubviews t)
 
-        librarySubviews :: Reflex t => Text -> UI t ()
+        librarySubviews :: Text -> UI ()
         librarySubviews = \case
             "Artists" -> navigationView "Artists" $ scrollView $ contentView do
                 navigationTitle "Artists"

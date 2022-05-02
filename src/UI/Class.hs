@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE QuantifiedConstraints #-}
-{-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -8,92 +8,67 @@
 {-# LANGUAGE DeriveFunctor #-}
 module UI.Class ( module Reflex.Dom, module UI.Class ) where
 
-import Data.Text (Text)
-
-import Reflex.Class (MonadHold(now))
-
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Fix (MonadFix, mfix)
 
-import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simpleList)
+import Reflex.Class as R (MonadHold(now), Behavior, Dynamic, Event)
+import Reflex.Dom.Builder.Class as B (Element, InputElement, InputElementConfig)
+import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simpleList, Behavior, Dynamic, Event, Element, InputElement, InputElementConfig)
 
-newtype UI t a = UI { unUI :: forall m t'. (Reflex t' => t' ~ t, MonadWidget t m)  => m a }
+type Behavior = R.Behavior Spider
+type Event = R.Event Spider
+type Dynamic = R.Dynamic Spider
+type Element = B.Element EventResult GhcjsDomSpace Spider
+type InputElement = B.InputElement EventResult GhcjsDomSpace Spider
+type InputElementConfig = B.InputElementConfig EventResult Spider GhcjsDomSpace
+
+newtype UI a = UI { unUI :: forall m. (MonadWidget Spider m) => m a }
     deriving (Functor)
 
-instance Applicative (UI t) where
+instance Applicative UI where
     pure x = UI $ pure x
     (UI f) <*> (UI a) = UI (f <*> a)
 
-instance Monad (UI t) where
+instance Monad UI where
     (UI x) >>= f = UI (x >>= unUI . f)
 
-instance MonadFix (UI t) where
+instance MonadFix UI where
     mfix f = UI $ mfix (unUI . f)
 
-instance MonadIO (UI t) where
+instance MonadIO UI where
     liftIO x = UI $ liftIO x
 
-instance MonadSample t (UI t) where
+instance MonadSample Spider UI where
     sample x = UI (sample x)
 
-instance NotReady t (UI t) where
-    notReadyUntil :: Event t a -> UI t ()
+instance NotReady Spider UI where
     notReadyUntil e = UI (notReadyUntil e)
-
-    notReady :: UI t ()
     notReady = UI notReady
 
-instance Reflex t => Adjustable t (UI t) where
+instance Adjustable Spider UI where
     runWithReplace u e = UI (runWithReplace (unUI u) (fmap unUI e))
     traverseIntMapWithKeyWithAdjust f i e = UI (traverseIntMapWithKeyWithAdjust (fmap unUI <$> f) i e)
     traverseDMapWithKeyWithAdjustWithMove f d e = UI (traverseDMapWithKeyWithAdjustWithMove ((fmap . fmap) unUI f) d e)
 
-instance Reflex t => DomBuilder t (UI t) where
-    type DomBuilderSpace (UI t) = GhcjsDomSpace
-
-    textNode :: TextNodeConfig t -> UI t (TextNode GhcjsDomSpace t)
+instance DomBuilder Spider UI where
+    type DomBuilderSpace UI = GhcjsDomSpace
     textNode t = UI (textNode t)
-
-    commentNode :: CommentNodeConfig t -> UI t (CommentNode GhcjsDomSpace t)
     commentNode c = UI (commentNode c)
-
-    element :: Text -> ElementConfig er t GhcjsDomSpace -> UI t a -> UI t (Element er GhcjsDomSpace t, a)
     element t e u = UI (element t e (unUI u))
-
-    inputElement :: InputElementConfig er t GhcjsDomSpace -> UI t (InputElement er GhcjsDomSpace t)
     inputElement e = UI (inputElement e)
-
-    textAreaElement :: TextAreaElementConfig er t GhcjsDomSpace -> UI t (TextAreaElement er GhcjsDomSpace t)
     textAreaElement e = UI (textAreaElement e)
-
-    selectElement :: SelectElementConfig er t GhcjsDomSpace -> UI t a -> UI t (SelectElement er GhcjsDomSpace t, a)
     selectElement e u = UI (selectElement e (unUI u))
-
-    placeRawElement :: RawElement GhcjsDomSpace -> UI t ()
     placeRawElement e = UI (placeRawElement e)
-
-    wrapRawElement :: RawElement GhcjsDomSpace -> RawElementConfig er t GhcjsDomSpace -> UI t (Element er GhcjsDomSpace t)
     wrapRawElement e cfg = UI (wrapRawElement e cfg)
 
-instance Reflex t => PostBuild t (UI t) where
+instance PostBuild Spider UI where
     getPostBuild = UI getPostBuild
 
-instance MonadHold t (UI t) where
-    hold :: a -> Event t a -> UI t (Behavior t a)
+instance MonadHold Spider UI where
     hold x e = UI (hold x e)
-
-    holdDyn :: a -> Event t a -> UI t (Dynamic t a)
     holdDyn x e = UI (holdDyn x e)
-
-    holdIncremental :: Patch p => PatchTarget p -> Event t p -> UI t (Incremental t p)
     holdIncremental p e = UI (holdIncremental p e)
-
-    buildDynamic :: PushM t a -> Event t a -> UI t (Dynamic t a)
     buildDynamic a e = UI (buildDynamic a e)
-
-    headE :: Event t a -> UI t (Event t a)
     headE e = UI (headE e)
-
-    now :: UI t (Event t ())
     now = UI now
 

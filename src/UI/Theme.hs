@@ -16,7 +16,7 @@ import Data.Text (Text, pack)
 
 import UI.Class
 
-type Theme :: (* -> * -> *) -> Constraint
+type Theme :: (* -> *) -> Constraint
 
 class Theme a where
     primaryColor :: Color

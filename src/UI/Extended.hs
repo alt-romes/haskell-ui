@@ -35,7 +35,7 @@ renderAttrs = T.unwords
 
 ---- Button ------------
 
-button_ :: Theme UI => [Attribute] -> Text -> UI t (Event t ())
+button_ :: Theme UI => [Attribute] -> Text -> UI (Event ())
 button_ attrs t = UI $ do
     (btn, _) <- elClass' "button" (renderAttrs ("button":attrs) <> " active:" <> borderPrimary) $ D.text t
     return $ domEvent Click btn

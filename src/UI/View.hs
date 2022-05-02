@@ -32,7 +32,7 @@ import qualified Reflex.Dom as D
 -- reached. If the content exceeds the page limit, it'll be hidden, however,
 -- with scroll view, scrolling is enabled so you can scroll down to the end of
 -- the content
-scrollView :: UI t a -> UI t a
+scrollView :: UI a -> UI a
 scrollView (UI x) = UI $ divClass "scroll-smooth overflow-y-scroll scroll-view" x
 
 data NavigationView = Top | Nested
@@ -52,7 +52,7 @@ data NavigationView = Top | Nested
 -- creates another widget
 --
 -- If the created widget wants to have a title it should set so itself
-navigationView :: Theme UI => Reflex t => Text -> UI t (Event t (UI t a)) -> UI t ()
+navigationView :: Theme UI => Text -> UI (Event (UI a)) -> UI ()
 navigationView title topView = do
     router (error "The top view should be rendered statically", Top) $ \case
         (_, Top) -> fmap (,Nested) <$> topView
@@ -66,7 +66,7 @@ navigationView title topView = do
 --
 -- Takes an initial tab, a list of tab names, and a routing function (tab name -> ui)
 -- The bool indicates whether to display or not the route name under the icon
-tabView :: Theme UI => Reflex t => Text -> [(Text, Icon)] -> Bool -> (Text -> UI t a) -> UI t ()
+tabView :: Theme UI => Text -> [(Text, Icon)] -> Bool -> (Text -> UI a) -> UI ()
 tabView initial ls displayName routing = mdo
     router initial ((clicks <$) <$> routing)
     clicks <- leftmost <$> UI do
@@ -86,7 +86,7 @@ tabView initial ls displayName routing = mdo
 
 -- | Create a navigation bar with a back button (with the first argument), a
 -- top title (the second argument) that fires the resulting event when the back button is clicked
-navigationBar :: Theme UI => Maybe Text -> Maybe Text -> UI t (Event t ())
+navigationBar :: Theme UI => Maybe Text -> Maybe Text -> UI (Event ())
 navigationBar backText titleText = UI do
     elClass "header" (borderColor <> " inset-x-0 border-b bg-white/40 backdrop-blur-md px-2 py-2") $ do
         elClass "div" "grid grid-cols-6" $ do

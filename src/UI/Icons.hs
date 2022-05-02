@@ -88,16 +88,16 @@ inboxO = OutlinedI "M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6
 
 
 -- | Render an icon with default values
-renderIcon :: Reflex t => Icon -> UI t ()
+renderIcon :: Icon -> UI ()
 renderIcon (OutlinedI p) = renderIcon' 6 "" (OutlinedI p)
 renderIcon (FilledI p)   = renderIcon' 5 "" (FilledI p)
 
 -- | Render an Icon given a size and additional classes
-renderIcon' :: Reflex t => Int -> Dynamic t Text -> Icon -> UI t ()
+renderIcon' :: Int -> Dynamic Text -> Icon -> UI ()
 renderIcon' size c = (() <$) . renderIcon'' size c
 
 -- | Like renderIcon' but return the @svg@ element
-renderIcon'' :: Reflex t => Int -> Dynamic t Text -> Icon -> UI t (Element EventResult GhcjsDomSpace t)
+renderIcon'' :: Int -> Dynamic Text -> Icon -> UI Element
 renderIcon'' size c (OutlinedI p) =
     fst <$> elDynAttrNS' (Just "http://www.w3.org/2000/svg") "svg" dAttrs do
         elDynAttrNS (Just "http://www.w3.org/2000/svg") "path" (constDyn $ "d" =: p <> "stroke-linejoin"=:"round" <> "stroke-linecap"=:"round") (return ())
