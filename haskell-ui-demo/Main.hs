@@ -17,6 +17,7 @@ import Cob.RecordM.TH
 import Cob.RecordM.UI
 import Cob.UserM.UI
 
+import UI.View
 import UI.Layout
 import UI.Text
 import UI.Theme
@@ -30,28 +31,31 @@ mkRecord ''Album "ROMES Albums" ["Cover", "Album", "Artist"]
 data Artist = Artist { url :: Text, name :: Text } deriving Show
 mkRecord ''Artist "ROMES Artists" ["Picture", "Name"]
 
-main :: IO ()
-main = mainUI (cobLogin "mimes8.cultofbits.com" ui)
-
 instance Theme UI where
-    primaryColor = Green
+    primaryColor = Fuchsia
     grayScale = Neutral
+
+
+main :: IO ()
+main = do
+    session <- emptySession "mimes8.cultofbits.com"
+    mainUI (ui session >> return ())
+    -- mainUI (cobLogin "mimes8.cultofbits.com" ui)
 
 ui :: Reflex t => CobSession -> UI t (Event t CobRoute)
 ui session = do
+
     tabView "Browse" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
 
         \case
 
-            "Listen Now" ->
-                navigationTitle "Listen Now"
+            "Listen Now" -> navigationTitle "Listen Now"
 
-            "Browse" -> navigationTitle "Browse"
+            "Browse"     -> navigationTitle "Browse"
 
-            "Radio" -> 
-                navigationTitle "Radio"
+            "Radio"      -> navigationTitle "Radio"
 
-            "Library" -> navigationView "Library" $ scrollView $ contentView do
+            "Library"    -> navigationView "Library" $ scrollView $ contentView do
 
                 navigationTitle  "Library"
 
@@ -71,33 +75,39 @@ ui session = do
                 return (leftmost [evs, evs2])
 
 
-            "Search" -> 
-                navigationTitle  "Search"
+            "Search" -> navigationTitle  "Search"
 
             _ -> error "unknown route"
     return never
+
     where
         recentlyAddedItem :: Reflex t => Dynamic t Album -> UI t (UI t (), Maybe Text)
-        recentlyAddedItem dalbum = vstack do
-            imageD (cover <$> dalbum)
-            dynText (album <$> dalbum)
-            dynText (artist <$> dalbum)
-            return (albumView dalbum, Nothing)
+        recentlyAddedItem dalbum =
+            vstack do
+                imageD (cover <$> dalbum)
+                dynText (album <$> dalbum)
+                dynText (artist <$> dalbum)
+                return (albumView dalbum, Nothing)
 
         albumView :: Reflex t => Dynamic t Album -> UI t ()
         albumView dalbum = label "Album" $ dynText (pack . show <$> dalbum)
 
         libraryMenuItem :: Reflex t => (Text, Icon) -> UI t (UI t (), Maybe Text)
-        libraryMenuItem (t, i) = paddingYContainer $ hstack do
-            renderIcon' 6 (constDyn textPrimary) i
-            p $ text t
-            spacer
-            renderIcon' 5 (constDyn textLight) chevronRightO
-            return (librarySubviews t, Just t)
+        libraryMenuItem (t, i) = paddingYContainer $
+            hstack do
+
+                renderIcon' 6 (constDyn textPrimary) i
+                p (text t)
+
+                spacer
+
+                renderIcon' 5 (constDyn textLight) chevronRightO
+
+                return (librarySubviews t, Just t)
 
         librarySubviews :: Reflex t => Text -> UI t ()
         librarySubviews = \case
-            "Artists" -> navigationView "Artists" $ scrollView do
+            "Artists" -> navigationView "Artists" $ scrollView $ contentView do
                 navigationTitle "Artists"
                 artists <- rmDefinitionInstances ("*" :: String) session
                 listE artists \a -> paddingYContainer $ hstack do
