@@ -28,6 +28,21 @@
 
 }
 
+@layer utilities {
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .no-scrollbar {
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+    }
+
+}
+
 .root.flex.flex-col.h-screen > * {
     @apply flex-1 overflow-hidden /* All sub-items need overflow-hidden so that
                                     they don't take the header or footer out of the screen. Use

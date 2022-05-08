@@ -8,12 +8,15 @@
 {-# LANGUAGE DeriveFunctor #-}
 module UI.Class ( module Reflex.Dom, module UI.Class ) where
 
+import Data.Text (pack)
+import Data.String (IsString(..))
+
 import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Fix (MonadFix, mfix)
 
 import Reflex.Class as R (MonadHold(now), Behavior, Dynamic, Event)
 import Reflex.Dom.Builder.Class as B (Element, InputElement, InputElementConfig)
-import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simpleList, Behavior, Dynamic, Event, Element, InputElement, InputElementConfig)
+import Reflex.Dom hiding (button, display, dynText, now, list, simpleList, Behavior, Dynamic, Event, Element, InputElement, InputElementConfig)
 
 import Language.Javascript.JSaddle.Types (MonadJSM(..))
 
@@ -86,6 +89,10 @@ instance TriggerEvent Spider UI where
 
 instance MonadJSM UI where
     liftJSM' x = UI (liftJSM' x)
+
+-- | A String is a UI just the text
+instance IsString (UI ()) where
+    fromString = text . pack
 
 -- timer :: NominalDiffTime -> UI (Event ())
 -- timer x = UI ((() <$) <$> tickLossyFromPostBuildTime x)

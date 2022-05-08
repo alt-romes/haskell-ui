@@ -16,7 +16,6 @@ data Side = T | R | B | L
 --                | P [Side] Int
 
 type Attribute = Text
-type ClassName = Text
 
 renderAttrs :: [Attribute] -> ClassName
 renderAttrs = T.unwords
