@@ -20,7 +20,7 @@ category:           Web
 extra-source-files: CHANGELOG.md
 
 library
-    exposed-modules:  UI, UI.Utils, UI.Extended, UI.Icons, UI.Theme, UI.Class, UI.Input, UI.Text, UI.Layout, UI.View, UI.Router
+    exposed-modules:  UI, UI.Utils, UI.Extended, UI.Icons, UI.Theme, UI.Class, UI.Input, UI.Text, UI.Layout, UI.View, UI.Router, UI.Lazy
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -35,6 +35,7 @@ library
                       file-embed,
                       time,
                       random,
+                      jsaddle
                       -- recursion-schemes,
     hs-source-dirs:   src
     default-language: Haskell2010

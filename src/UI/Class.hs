@@ -15,6 +15,8 @@ import Reflex.Class as R (MonadHold(now), Behavior, Dynamic, Event)
 import Reflex.Dom.Builder.Class as B (Element, InputElement, InputElementConfig)
 import Reflex.Dom hiding (button, display, dynText, blank, now, text, list, simpleList, Behavior, Dynamic, Event, Element, InputElement, InputElementConfig)
 
+import Language.Javascript.JSaddle.Types (MonadJSM(..))
+
 type Behavior = R.Behavior Spider
 type Event = R.Event Spider
 type Dynamic = R.Dynamic Spider
@@ -22,7 +24,7 @@ type Element = B.Element EventResult GhcjsDomSpace Spider
 type InputElement = B.InputElement EventResult GhcjsDomSpace Spider
 type InputElementConfig = B.InputElementConfig EventResult Spider GhcjsDomSpace
 
-newtype UI a = UI { unUI :: forall m. (MonadWidget Spider m) => m a }
+newtype UI a = UI { unUI :: forall m. (Monad (Performable m), MonadWidget Spider m) => m a }
     deriving (Functor)
 
 instance Applicative UI where
@@ -72,12 +74,19 @@ instance MonadHold Spider UI where
     headE e = UI (headE e)
     now = UI now
 
--- TODO:
--- instance PerformEvent Spider UI where
---     -- type Performable UI = IO
---     performEvent e = UI (performEvent e)
--- and fix timer in UI.hs
---
+instance PerformEvent Spider UI where
+    type Performable UI = UI
+    performEvent e = UI (unUI $ performEvent e)
+    performEvent_ e = UI (unUI $ performEvent_ e)
+
+instance TriggerEvent Spider UI where
+    newTriggerEvent = UI newTriggerEvent
+    newTriggerEventWithOnComplete = UI newTriggerEventWithOnComplete
+    newEventWithLazyTriggerWithOnComplete f = UI (newEventWithLazyTriggerWithOnComplete f)
+
+instance MonadJSM UI where
+    liftJSM' x = UI (liftJSM' x)
+
 -- timer :: NominalDiffTime -> UI (Event ())
 -- timer x = UI ((() <$) <$> tickLossyFromPostBuildTime x)
 -- TODO Fix MonadSample and 'path' in Router too

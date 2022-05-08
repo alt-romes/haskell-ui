@@ -126,12 +126,18 @@ contentView = divClass "py-8 px-5"
 imageRS :: Text -> UI ()
 imageRS url = elAttr "img" ("src"=:url <> "class"=:"h-10 w-10 rounded-full object-cover") blank
 
+dynImgRoundedSm :: Dynamic Text -> UI ()
+dynImgRoundedSm url = elDynAttr "img" (("class"=:"h-10 w-10 rounded-full object-cover" <>) . ("src"=:) <$> url) blank
+
 -- | Dynamic Image (the image will change when the dynamic url is updated)
 imageD :: Dynamic Text -> UI ()
 imageD url = elDynAttr "img" (("class"=:"object-cover max-w-56 max-h-56 rounded-md" <>) . ("src"=:) <$> url) blank
 
 heading :: Theme UI => Text -> UI ()
-heading = elClass "h3" (textColor <> " pt-6 pb-2 text-2xl font-semibold w-2/3") . text
+heading = elClass "h3" (textColor <> " pt-2 pb-2 text-2xl font-semibold w-2/3") . text
+
+headingPT :: Theme UI => Text -> UI ()
+headingPT = elClass "h3" (textColor <> " pt-6 pb-2 text-2xl font-semibold w-2/3") . text
 
 navigationTitle :: Theme UI => Text -> UI ()
 navigationTitle = elClass "h1" (textColor <> " pt-6 pb-2 text-4xl font-bold w-2/3") . text
@@ -185,7 +191,7 @@ blank = return ()
 
 -- | Fire an event every X seconds
 timer :: NominalDiffTime -> UI (Event ())
-timer x = UI ((() <$) <$> tickLossyFromPostBuildTime x)
+timer = fmap (() <$) . tickLossyFromPostBuildTime
 
 -- | Fire an event /now/
 now :: UI (Event ())
