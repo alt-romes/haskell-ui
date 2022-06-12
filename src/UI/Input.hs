@@ -8,6 +8,7 @@ module UI.Input
     ( input
     , inputP
     , inputC
+    , inputE
     ) where
 
 import Data.Text
@@ -29,6 +30,14 @@ inputP = fmap value . input' IPassword id
 -- | Simple text input box that is cleared when the given event fires.
 inputC :: Theme UI => Text -> Event a -> UI (Dynamic Text)
 inputC t evt = value <$> input' IText (inputElementConfig_setValue .~ ("" <$ evt)) t
+
+-- | Simple text input box that changes value to the event text when the said event fires.
+inputE :: Theme UI => Text -> Event Text -> UI (Event Text)
+-- NOTE: This _inputElement_input for some reason works for temperature counter,
+-- but value doesn't work. perhaps best solution would be for all of these to
+-- export just the InputElement and then export 2 functions, one for getting the
+-- event and the other for the value.
+inputE t evt = _inputElement_input <$> input' IText (inputElementConfig_setValue .~ evt) t
 
 data InputType = IText | IPassword
 instance Show InputType where

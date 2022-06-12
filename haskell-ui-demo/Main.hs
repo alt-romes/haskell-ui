@@ -36,7 +36,6 @@ instance Theme UI where
     primaryColor = Red
     grayScale = Neutral
 
-
 main :: IO ()
 main = do
     -- session <- emptySession "mimes8.cultofbits.com"
@@ -79,7 +78,7 @@ ui session = do
                 2 -> heading "2000s"
                 3 -> heading "New Releases"
                 4 -> heading "1980s"
-                
+
             return never
 
 
@@ -132,7 +131,7 @@ ui session = do
             return (albumView dalbum)
 
     albumView :: Dynamic Album -> UI ()
-    albumView dalbum = label "Album" $ dynText (pack . show <$> dalbum)
+    albumView dalbum = label (text "Album") $ dynText (pack . show <$> dalbum)
 
     libraryMenuItem :: (Text -> UI ()) -> (Text, Icon) -> UI (UI ())
     libraryMenuItem mkPage (t, i) =
