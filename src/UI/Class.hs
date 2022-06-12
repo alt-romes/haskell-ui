@@ -16,7 +16,7 @@ import Control.Monad.Fix (MonadFix, mfix)
 
 import Reflex.Class as R (MonadHold(now), Behavior, Dynamic, Event)
 import Reflex.Dom.Builder.Class as B (Element, InputElement, InputElementConfig)
-import Reflex.Dom hiding (button, display, dynText, now, list, simpleList, Behavior, Dynamic, Event, Element, InputElement, InputElementConfig)
+import Reflex.Dom hiding (button, display, dynText, now, list, simpleList, Behavior, Dynamic, Event, Element, InputElement, InputElementConfig, updated)
 
 import Language.Javascript.JSaddle.Types (MonadJSM(..))
 

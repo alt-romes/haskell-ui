@@ -5,15 +5,13 @@ UI elements for displaying text
 -}
 module UI.Text where
 
-import Data.Text
-
 import UI.Class
 import UI.Theme
 
 -- | Add a label above the given UI
-label :: Theme UI => Text -> UI a -> UI a
+label :: Theme UI => UI a -> UI b -> UI b
 label t e = el "div" $ do
-    elClass "label" (textDarker <> " block text-sm font-medium mb-1") $ text t
+    _ <- elClass "label" (textDarker <> " block text-sm font-medium mb-1") t
     e
 
 -- | Heading text

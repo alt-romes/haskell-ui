@@ -10,10 +10,10 @@
 {-# LANGUAGE BlockArguments #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
-module UI ( module UI, UI, Text, NominalDiffTime) where
+module UI ( module UI, UI, Text, pack, unpack, text, NominalDiffTime) where
 
 import Data.FileEmbed
-import Data.Text (Text, pack)
+import Data.Text (Text, pack, unpack)
 import Data.Time (NominalDiffTime)
 
 import Control.Monad (forM, (>=>))
