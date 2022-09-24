@@ -23,7 +23,7 @@ import UI.Layout
 import UI.Text
 import UI.Theme
 import UI.Class
-import UI.Icons
+import UI.Icons as Icons
 import UI
 
 data Album = Album { cover :: Text, album :: Text, artist :: Text } deriving Show
@@ -45,7 +45,7 @@ main = do
 ui :: CobSession -> UI (Event CobRoute)
 ui session = do
 
-    tabView "Browse" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", search)] True
+    tabView "Browse" [("Listen Now", play), ("Browse", viewGrid), ("Radio", statusOnlineO), ("Library", collection), ("Search", Icons.search)] True
 
         \case
 
@@ -72,7 +72,7 @@ ui session = do
             menu [1..4] $ \case
                 1 -> do
                     heading "Top Picks"
-                    albums <- rmDefinitionInstances "*" session
+                    albums <- definitionInstances "*" session
                     gridXE 1 albums albumItem
                     headingM (MT S4) "Recently Played"
                 2 -> heading "2000s"
@@ -112,7 +112,7 @@ ui session = do
 
         headingM (MT S4) "Recently Added"
 
-        albums <- rmDefinitionInstances "*" session
+        albums <- definitionInstances "*" session
         evs2 <- gridYE 2 albums albumItem
 
         return (leftmost [evs, evs2])
@@ -145,7 +145,7 @@ ui session = do
     artistsPage :: UI ()
     artistsPage = navigationView "Artists" $ scrollView $ contentView do
         navigationTitle "Artists"
-        artists <- rmDefinitionInstances "*" session
+        artists <- definitionInstances "*" session
         listE artists \a -> hstack do
             dynImgRoundedSm (url <$> a)
             p $ dynText (name <$> a)
